@@ -1,0 +1,29 @@
+[project]
+name = "mammoth-lite"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "gitpython",
+    "numpy",
+    "six",
+    "torch",
+    "torchvision",
+    "tqdm",
+]
+
+[[tool.uv.index]]
+url = "https://download.pytorch.org/whl/cu118"
+name = "torch"
+
+[tool.mypy]
+mypy_path = "mammoth"
+python_executable = '.venv/bin/python'
+
+[tool.ty.src]
+root = "./mammoth"
+
+[dependency-groups]
+dev = [
+    "types-six>=1.17.0.20250515",
+    "types-tqdm>=4.67.0.20250516",
+]
