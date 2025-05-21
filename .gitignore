@@ -3,3 +3,5 @@ __pycache__
 *.pyc
 data
 uv.lock
+dist
+*.egg-info

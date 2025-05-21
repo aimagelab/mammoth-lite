@@ -37,8 +37,9 @@ def get_all_datasets_legacy():
     """
     Returns the list of all the available datasets in the datasets folder that follow the old naming convention.
     """
+    basepath: str = os.getenv("MAMMOTH_BASE_PATH", '.')
 
-    return [model.split('.')[0] for model in os.listdir('datasets')
+    return [model.split('.')[0] for model in os.listdir(os.path.join(basepath, 'datasets'))
             if not model.find('__') > -1 and 'py' in model]
 
 
@@ -98,31 +99,6 @@ def get_dataset_names(names_only=False):
     if names_only:
         return list(names.keys())
     return names
-
-
-def get_dataset_config_names(dataset: str):
-    """
-    Return the names of the available continual dataset configurations.
-
-    The configurations can be used to create a dataset with specific hyperparameters and can be
-    specified using the `--dataset_config` attribute.
-
-    The configurations are stored in the `datasets/configs/<dataset>` folder.
-    """
-
-    def _dataset_config_names(dataset):
-        names = []
-        if os.path.exists(f'datasets/configs/{dataset}'):
-            names = [dset_config.split('.yaml')[0] for dset_config in os.listdir(f'datasets/configs/{dataset}')
-                     if dset_config.endswith('.yaml') and not dset_config.startswith('__')]
-        return names
-
-    if not hasattr(get_dataset_config_names, 'names'):
-        setattr(get_dataset_config_names, 'names', {})
-    if dataset not in get_dataset_config_names.names:  # type: ignore
-        get_dataset_config_names.names[dataset] = _dataset_config_names(dataset)  # type: ignore
-    return get_dataset_config_names.names[dataset]  # type: ignore
-
 
 def get_dataset_class(args: Namespace) -> Tuple[Type[ContinualDataset], dict]:
     """

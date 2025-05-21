@@ -79,7 +79,7 @@ def parse_args():
     # 3) Once all arguments are in the parser, we can parse
     args = parser.parse_args()
 
-    # 7) final checks and updates to the arguments
+    # 4) final checks and updates to the arguments
     models_dict = get_all_models()
     args.model = models_dict[args.model]
 

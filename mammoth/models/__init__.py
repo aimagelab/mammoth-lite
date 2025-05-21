@@ -12,8 +12,14 @@ if TYPE_CHECKING:
 
 
 def get_all_models() -> dict[str, str]:
-    return {model.split('.')[0].replace('_', '-'): model.split('.')[0] for model in os.listdir('models')
-            if not model.find('__') > -1 and not os.path.isdir('models/' + model)}
+    """
+    Get a dictionary of all available models.
+    """
+    basepath: str = os.getenv("MAMMOTH_BASE_PATH", '.')
+
+    return {model.split('.')[0].replace('_', '-'): model.split('.')[0]
+            for model in os.listdir(os.path.join(basepath, 'models'))
+            if not model.find('__') > -1 and not os.path.isdir(os.path.join(basepath, 'models', model))}
 
 
 def get_model(args: Namespace, backbone: nn.Module, loss: nn.Module, transform: 'Compose', dataset: 'ContinualDataset') -> 'ContinualModel':

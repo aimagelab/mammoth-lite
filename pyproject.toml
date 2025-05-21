@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
     "gitpython",
+    "ipykernel>=6.29.5",
     "numpy",
     "six",
     "torch",
