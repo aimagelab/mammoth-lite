@@ -24,6 +24,20 @@ root = "./mammoth"
 
 [dependency-groups]
 dev = [
+    "pytest>=8.3.5",
     "types-six>=1.17.0.20250515",
     "types-tqdm>=4.67.0.20250516",
+]
+
+[tool.pytest]
+minversion="6.0"
+addopts="-ra"
+testpaths="tests"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::RuntimeWarning",
+    "ignore::FutureWarning",
+    "ignore::Warning",
+    "ignore::SyntaxWarning",
 ]
