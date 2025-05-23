@@ -16,18 +16,18 @@ def get_device() -> torch.device:
             return torch.device('cuda')
         try:
             if torch.backends.mps.is_available() and torch.backends.mps.is_built():
-                logging.warning("MSP support is still experimental. Use at your own risk!")
+                print("WARNING: MSP support is still experimental. Use at your own risk!")
                 return torch.device("mps")
         except BaseException:
-            logging.error("Something went wrong with MPS. Using CPU.")
+            print("ERROR: Something went wrong with MPS. Using CPU.")
 
-        logging.warning("No GPU available. Using CPU.")
+        print("WARNING: No GPU available. Using CPU.")
         return torch.device("cpu")
 
     # Permanently store the chosen device
     if not hasattr(get_device, 'device'):
         get_device.device = _get_device()  # type: ignore
-        logging.info(f'Using device {get_device.device}')  # type: ignore
+        print(f'Using device {get_device.device}')  # type: ignore
 
     return get_device.device  # type: ignore
 

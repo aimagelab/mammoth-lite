@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 
 from backbone import REGISTERED_BACKBONES
 from datasets import get_dataset_names
-from models import get_all_models
+from models import get_model_names
 from . import binary_to_boolean_type # type: ignore
 
 
@@ -22,7 +22,7 @@ def add_initial_args(parser) -> ArgumentParser:
                         choices=get_dataset_names(names_only=True),
                         help='Which dataset to perform experiments on.')
     parser.add_argument('--model', type=str, required=True,
-                        help='Model name.', choices=list(get_all_models().keys()))
+                        help='Model name.', choices=get_model_names())
     parser.add_argument('--backbone', type=str, help='Backbone network name.', choices=list(REGISTERED_BACKBONES.keys()))
 
     return parser

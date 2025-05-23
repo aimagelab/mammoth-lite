@@ -8,6 +8,7 @@
         {
             "name": "main",
             "type": "debugpy",
+            "consoleName": "main",
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
@@ -18,6 +19,7 @@
             "name": "basics",
             "type": "debugpy",
             "request": "launch",
+            "consoleName": "basics",
             "program": "basics.py",
             "justMyCode": false,
             "console": "integratedTerminal",

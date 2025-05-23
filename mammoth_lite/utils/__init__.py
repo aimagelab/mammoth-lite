@@ -86,14 +86,12 @@ def register_dynamic_module_fn(name: str, register: dict):
     name = name.replace('_', '-').lower()
 
     def register_network_fn(target: Callable) -> Callable:
-        # check if the name is already registered
-        if name in register:
-            raise ValueError(f"Name {name} already registered!")
-
         signature = inspect.signature(target)
 
         parsable_args = infer_args_from_signature(signature)
         register[name] = {'class': target, 'parsable_args': parsable_args}
+
+        setattr(target, 'NAME', name)
         return target
 
     return register_network_fn

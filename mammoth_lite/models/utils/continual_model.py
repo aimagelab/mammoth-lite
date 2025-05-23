@@ -41,7 +41,7 @@ class ContinualModel(nn.Module):
     Continual learning model.
     """
     NAME: str
-    COMPATIBILITY: List[str]
+    COMPATIBILITY: List[str] = ['class-il', 'task-il']
 
     args: Namespace  # The command line arguments
     device: torch.device  # The device to be used for training
@@ -64,7 +64,8 @@ class ContinualModel(nn.Module):
     def __init__(self, backbone: 'MammothBackbone', loss: nn.Module,
                  args: Namespace, transform: nn.Module, dataset: Optional['ContinualDataset'] = None) -> None:
         super(ContinualModel, self).__init__()
-        logging.info("Using {} as backbone".format(backbone.__class__.__name__))
+        print("Loading model: ", self.NAME)
+        print(f"- Using {backbone.__class__.__name__} as backbone")
         self.net = backbone
         self.loss = loss
         self.args = args

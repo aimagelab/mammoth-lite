@@ -1,3 +1,5 @@
+import json
+import os
 from argparse import Namespace, ArgumentParser
 from typing import Any, Tuple, TYPE_CHECKING
 
@@ -11,7 +13,17 @@ if TYPE_CHECKING:
     from models.utils.continual_model import ContinualModel
     from datasets.utils.continual_dataset import ContinualDataset
 
-def load_runner(model_name: str, dataset_name: str, experiment_args: dict[str, Any]) -> Tuple[Namespace, 'ContinualModel', 'ContinualDataset']:
+def load_runner(model_name: str, dataset_name: str, experiment_args: dict[str, Any]) -> Tuple['ContinualModel', 'ContinualDataset']:
+    """
+    Load the model and dataset for the given experiment.
+    Args:
+        model_name (str): The name of the model to be used.
+        dataset_name (str): The name of the dataset to be used.
+        experiment_args (dict): A dictionary containing the arguments for the experiment.
+
+    Returns:
+        Tuple[ContinualModel, ContinualDataset]: A tuple containing the model and dataset.
+    """
     assert 'lr' in experiment_args, "Learning rate not specified in experiment arguments. Add 'lr' to the experiment arguments."
     assert 'batch_size' in experiment_args, "Batch size not specified in experiment arguments. Add 'batch_size' to the experiment arguments."
     assert 'n_epochs' in experiment_args, "Number of epochs not specified in experiment arguments. Add 'n_epochs' to the experiment arguments."
@@ -23,7 +35,9 @@ def load_runner(model_name: str, dataset_name: str, experiment_args: dict[str, A
     backbone = get_backbone(args)
     model = get_model(args, backbone, dataset.get_loss(), dataset.get_transform(), dataset)
     
-    return args, model, dataset
+    os.environ['MAMMOTH_ARGS'] = json.dumps(vars(args))
+
+    return model, dataset
     
 
 def initalize_args(model_name: str, dataset_name: str, experiment_args: dict[str, Any]) -> Namespace:
@@ -43,9 +57,14 @@ def initalize_args(model_name: str, dataset_name: str, experiment_args: dict[str
 
     return parser.parse_args(exp_str)
 
-def get_avail_args():
+def get_avail_args() -> Tuple[dict[str, dict], dict[str, dict]]:
     """
-    Returns the available arguments for the model and dataset.
+    Get the available arguments for the Mammoth Lite framework.
+    This function returns two lists: one for required arguments and one for optional arguments.
+    Each list contains dictionaries with:
+    - the name of the argument as the key
+    - a dictionary with the 'default' and 'description' of the argument as the value
+    Note that the 'default' key is only present for optional arguments.
     """
     parser = ArgumentParser(allow_abbrev=False, add_help=False)
 
@@ -53,4 +72,17 @@ def get_avail_args():
     add_management_args(parser)
     add_experiment_args(parser)
 
-    return parser.format_usage()
+    required_args, optional_args = {}, {}
+    for group in parser._action_groups:
+        for action in group._group_actions:
+            if action.dest not in ['help', 'debug_mode']:
+                if action.required:
+                    required_args[action.dest] = {
+                        'description': action.help
+                    }
+                else:
+                    optional_args[action.dest] = {
+                        'default': action.default,
+                        'description': action.help
+                    }
+    return required_args, optional_args

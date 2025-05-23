@@ -13,7 +13,6 @@ To run the script, execute it directly or import it as a module and call the `ma
 # needed (don't change it)
 import numpy  # noqa
 
-import logging
 import os
 import sys
 import time
@@ -66,7 +65,7 @@ def parse_args():
     args = parser.parse_known_args()[0]
 
     if args.backbone is None:
-        logging.warning('No backbone specified. Using default backbone (set by the dataset).')
+        print('No backbone specified. Using default backbone (set by the dataset).')
 
     add_help(parser)
 
@@ -94,7 +93,7 @@ def parse_args():
         repo = git.Repo(path=mammoth_path)
         args.conf_git_hash = repo.head.object.hexsha
     except Exception:
-        logging.error("Could not retrieve git hash.")
+        print("ERROR: Could not retrieve git hash.")
         args.conf_git_hash = None
 
     if args.savecheck:
@@ -105,7 +104,7 @@ def parse_args():
         uid = args.conf_jobnum.split('-')[0]
         extra_ckpt_name = "" if args.ckpt_name is None else f"{args.ckpt_name}_"
         args.ckpt_name = f"{extra_ckpt_name}{args.model}_{args.dataset}_{args.dataset_config}_{args.buffer_size if hasattr(args, 'buffer_size') else 0}_{args.n_epochs}_{str(now)}_{uid}"
-        logging.info(f"Saving checkpoint into: {args.ckpt_name}")
+        print(f"Saving checkpoint into: {args.ckpt_name}")
 
     # legacy print of the args, to make automatic parsing easier
     print(args)
@@ -132,7 +131,7 @@ def main(args=None):
     args.num_classes = dataset.N_CLASSES
     
     backbone = get_backbone(args)
-    logging.info(f"Using backbone: {args.backbone}")
+    print(f"Using backbone: {args.backbone}")
 
     loss = dataset.get_loss()
     model = get_model(args, backbone, loss, dataset.get_transform(), dataset=dataset)

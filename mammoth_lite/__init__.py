@@ -6,11 +6,13 @@ sys.path.insert(0, mammoth_path)
 
 os.environ["MAMMOTH_BASE_PATH"] = mammoth_path
 
-from models import get_model_names
-from datasets import get_dataset_names
-from backbone import get_backbone_names
+from models import get_model_names, register_model, ContinualModel
+from datasets import get_dataset_names, register_dataset, ContinualDataset
+from datasets.utils.continual_dataset import MammothDataset
+from backbone import get_backbone_names, register_backbone, MammothBackbone
 from utils.utils import load_runner, get_avail_args
 from utils.training import train
+from utils.conf import base_path, get_device
 
 # API:
 # - get all datasets, backbones, models by name
@@ -23,5 +25,14 @@ __all__ = [
     "get_backbone_names",
     "load_runner",
     "get_avail_args",
-    "train"
+    "train",
+    "register_model",
+    "register_dataset",
+    "register_backbone",
+    "ContinualModel",
+    "ContinualDataset",
+    "MammothBackbone",
+    "MammothDataset",
+    "base_path",
+    "get_device",
 ]

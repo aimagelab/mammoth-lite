@@ -2,14 +2,17 @@ from argparse import Namespace
 import os
 from typing import Callable, Optional, Tuple
 
-import torch
 import numpy as np
+import torch
+import torch.nn.functional as F
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
 
 class MammothDataset(Dataset):
     data: np.ndarray
     targets: np.ndarray
+    not_aug_transform: transforms.Compose = transforms.Compose([transforms.ToTensor()])
 
 
 class ContinualDataset(object):
@@ -83,7 +86,7 @@ class ContinualDataset(object):
             end_c = self.N_CLASSES
         return start_c, end_c
 
-    def get_data_loaders(self) -> Tuple[DataLoader, DataLoader]:
+    def get_data_loaders(self) -> Tuple[MammothDataset, MammothDataset]:
         """Creates and returns the training and test loaders for the current task.
         The current training loader and all test loaders are stored in self.
 
@@ -91,31 +94,38 @@ class ContinualDataset(object):
             the current training and test loaders
         """
         raise NotImplementedError
+    
+    def meta_get_data_loaders(self) -> Tuple[DataLoader, DataLoader]:
+        """Creates and returns the training and test loaders for the current task.
+        The current training loader and all test loaders are stored in self.
+
+        Returns:
+            the current training and test loaders
+        """
+        train_dataset, test_dataset = self.get_data_loaders()
+        return store_masked_loaders(train_dataset, test_dataset, self)
 
     @staticmethod
     def get_backbone() -> str:
         """Returns the name of the backbone to be used for the current dataset. This can be changes using the `--backbone` argument or by setting it in the `dataset_config`."""
         raise NotImplementedError
 
-    @staticmethod
-    def get_transform() -> nn.Module:
+    @classmethod
+    def get_transform(cls) -> nn.Module:
         """Returns the transform to be used for the current dataset."""
-        raise NotImplementedError
+        transform = transforms.Compose(
+            [transforms.ToPILImage(), cls.TRANSFORM])
+        return transform
 
     @staticmethod
     def get_loss() -> nn.Module:
-        """Returns the loss to be used for the current dataset."""
-        raise NotImplementedError
+        """Returns the loss to be used for the current dataset. By default, it returns the cross entropy loss."""
+        return F.cross_entropy
 
-    @staticmethod
-    def get_normalization_transform() -> nn.Module:
+    @classmethod
+    def get_normalization_transform(cls) -> nn.Module:
         """Returns the transform used for normalizing the current dataset."""
-        raise NotImplementedError
-
-    @staticmethod
-    def get_denormalization_transform() -> nn.Module:
-        """Returns the transform used for denormalizing the current dataset."""
-        raise NotImplementedError
+        return transforms.Normalize(cls.MEAN, cls.STD)
 
 
 def store_masked_loaders(train_dataset: MammothDataset, test_dataset: MammothDataset,

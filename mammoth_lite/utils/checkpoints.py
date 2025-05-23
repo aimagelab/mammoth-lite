@@ -83,7 +83,7 @@ def mammoth_load_checkpoint(args, model: 'ContinualModel') -> Tuple['ContinualMo
     if 'buffer' in saved_obj:
         loading_model = saved_obj['args'].model
         if args.model != loading_model:
-            logging.warning(f'The loaded model was trained with a different model: {loading_model}')
+            print(f'WARNING: The loaded model was trained with a different model: {loading_model}')
         model.load_buffer(saved_obj['buffer'])
 
     return model, saved_obj['results']
@@ -114,4 +114,4 @@ def save_mammoth_checkpoint(task: int, end_task: int, args: Namespace, model: 'C
         save_obj['buffer'] = model.buffer.serialize() # type: ignore
 
     torch.save(save_obj, checkpoint_name + '.pt')
-    logging.info(f"Checkpoint for task {task} saved at {checkpoint_name}")
+    print(f"Checkpoint for task {task} saved at {checkpoint_name}")

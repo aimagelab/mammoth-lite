@@ -1,15 +1,16 @@
+import json
+import os
 import numpy as np
 import math
 from argparse import Namespace
-from typing import Iterable
-import logging
+from typing import Iterable, Optional
 import sys
 import torch
 # Check if we're in a notebook environment
-if 'ipykernel' in sys.modules:
-    from tqdm.notebook import tqdm
-else:
+if 'ipykernel' not in sys.modules:
     from tqdm import tqdm
+else:
+    from tqdm.notebook import tqdm
 
 from datasets.utils.continual_dataset import ContinualDataset
 from models.utils.continual_model import ContinualModel
@@ -52,15 +53,21 @@ def train_epoch(model: ContinualModel,
         pbar.update()
 
 def train(model: ContinualModel, dataset: ContinualDataset,
-          args: Namespace) -> None:
+          args: Optional[Namespace] = None) -> None:
     """
     The training process, including evaluations and loggers.
 
     Args:
         model: the module to be trained
         dataset: the continual dataset at hand
-        args: the arguments of the current execution
+        args: the arguments of the current execution. If None, it will be loaded from the environment variable 'MAMMOTH_ARGS'.
     """
+    if args is None:
+        env_args = os.getenv('MAMMOTH_ARGS')
+        if env_args is None:
+            raise ValueError("No arguments provided. Did you run the `load_runner` function?")
+        args = Namespace(**json.loads(env_args))
+        os.environ['MAMMOTH_ARGS'] = json.dumps(vars(args))
 
     model.net.to(model.device)
     torch.cuda.empty_cache()
@@ -74,36 +81,39 @@ def train(model: ContinualModel, dataset: ContinualDataset,
         if not args.disable_log and past_res is not None:
             results, results_mask_classes = past_res
 
-        logging.info('Checkpoint Loaded!')
+        print('Checkpoint Loaded!')
 
     torch.cuda.empty_cache()
-    for t in range(dataset.N_TASKS):
-        model.net.train()
-        train_loader, _ = dataset.get_data_loaders()
+    try:
+        for t in range(dataset.N_TASKS):
+            model.net.train()
+            train_loader, _ = dataset.meta_get_data_loaders()
 
-        model.begin_task(dataset)
+            model.begin_task(dataset)
 
-        train_pbar = tqdm(train_loader, total=len(train_loader), mininterval=0.1)
-        logging.info(f"Task {t + 1}")  # at least print the task number
+            train_pbar = tqdm(train_loader, total=len(train_loader), mininterval=0.1)
+            print(f"Task {t + 1}")  # at least print the task number
 
-        for epoch in range(args.n_epochs):
-            train_pbar.set_description(f"Task {t + 1} - Epoch {epoch + 1}")
+            for epoch in range(args.n_epochs):
+                train_pbar.set_description(f"Task {t + 1} - Epoch {epoch + 1}")
 
-            train_epoch(model, train_loader, args, pbar=train_pbar, epoch=epoch)
+                train_epoch(model, train_loader, args, pbar=train_pbar, epoch=epoch)
 
-        train_pbar.close()
+            train_pbar.close()
 
-        model.end_task(dataset)
+            model.end_task(dataset)
 
-        accs = evaluate(model, dataset)
+            accs = evaluate(model, dataset)
 
-        mean_acc = np.mean(accs, axis=1)
-        print(f'Accuracy for task {t + 1}\t[Class-IL]: {mean_acc[0]:.2f} \t[Task-IL]: {mean_acc[1]:.2f}')
+            mean_acc = np.mean(accs, axis=1)
+            print(f'Accuracy for task {t + 1}\t[Class-IL]: {mean_acc[0]:.2f} \t[Task-IL]: {mean_acc[1]:.2f}')
 
-        results.append(accs[0])
-        results_mask_classes.append(accs[1])
-        
-        if args.savecheck:
-            save_mammoth_checkpoint(t, dataset.N_TASKS, args, model,
-                                    results=(results, results_mask_classes), # type: ignore
-                                    optimizer_st=model.opt.state_dict())
+            results.append(accs[0])
+            results_mask_classes.append(accs[1])
+            
+            if args.savecheck:
+                save_mammoth_checkpoint(t, dataset.N_TASKS, args, model,
+                                        results=(results, results_mask_classes), # type: ignore
+                                        optimizer_st=model.opt.state_dict())
+    except KeyboardInterrupt:
+        print("Training interrupted!")

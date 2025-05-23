@@ -1,24 +1,12 @@
 from typing import Tuple
 
-import torch
-import torch.nn.functional as F
 import torchvision.transforms as transforms
 from PIL import Image
 from torchvision.datasets import CIFAR10
 
 from utils.conf import base_path
 from datasets import register_dataset
-from datasets.utils.denormalization import DeNormalize
-from datasets.utils.continual_dataset import (ContinualDataset, store_masked_loaders, MammothDataset)
-
-
-class TCIFAR10(MammothDataset, CIFAR10):
-    """Workaround to avoid printing the already downloaded messages."""
-
-    def __init__(self, root, train=True, transform=None,
-                 target_transform=None, download=False) -> None:
-        self.root = root
-        super(TCIFAR10, self).__init__(root, train, transform, target_transform, download=not self._check_integrity())
+from datasets.utils.continual_dataset import (ContinualDataset, MammothDataset)
 
 
 class MyCIFAR10(MammothDataset, CIFAR10):
@@ -26,10 +14,8 @@ class MyCIFAR10(MammothDataset, CIFAR10):
     Overrides the CIFAR10 dataset to change the getitem function.
     """
 
-    def __init__(self, root, train=True, transform=None,
-                 target_transform=None, download=False) -> None:
-        self.not_aug_transform = transforms.Compose([transforms.ToTensor()])
-        self.root = root
+    def __init__(self, root, train=True, transform=None, target_transform=None) -> None:
+        # not self._check_integrity() -> trick to avoid printing debug messages
         super(MyCIFAR10, self).__init__(root, train, transform, target_transform, download=not self._check_integrity())
 
     def __getitem__(self, index: int) -> Tuple[Image.Image, int, Image.Image]:
@@ -90,38 +76,20 @@ class SequentialCIFAR10(ContinualDataset):
 
     TEST_TRANSFORM = transforms.Compose([transforms.ToTensor(), transforms.Normalize(MEAN, STD)])
 
-    def get_data_loaders(self) -> Tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
+    def get_data_loaders(self):
         """Class method that returns the train and test loaders."""
-        transform = self.TRANSFORM
-
         train_dataset = MyCIFAR10(base_path() + 'CIFAR10', train=True,
-                                  download=True, transform=transform)
-        test_dataset = TCIFAR10(base_path() + 'CIFAR10', train=False,
+                                  download=True, transform=self.TRANSFORM)
+        test_dataset = MyCIFAR10(base_path() + 'CIFAR10', train=False,
                                 download=True, transform=self.TEST_TRANSFORM)
 
-        train, test = store_masked_loaders(train_dataset, test_dataset, self)
-        return train, test
-
-    @staticmethod
-    def get_transform():
-        transform = transforms.Compose(
-            [transforms.ToPILImage(), SequentialCIFAR10.TRANSFORM])
-        return transform
+        return train_dataset, test_dataset
 
     @staticmethod
     def get_backbone():
         return "resnet18"
 
     @staticmethod
-    def get_loss():
-        return F.cross_entropy
-
-    @staticmethod
     def get_normalization_transform():
         transform = transforms.Normalize(SequentialCIFAR10.MEAN, SequentialCIFAR10.STD)
-        return transform
-
-    @staticmethod
-    def get_denormalization_transform():
-        transform = DeNormalize(SequentialCIFAR10.MEAN, SequentialCIFAR10.STD)
         return transform
