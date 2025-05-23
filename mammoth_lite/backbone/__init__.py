@@ -1,5 +1,6 @@
 from argparse import Namespace
 import importlib
+import inspect
 import os
 import math
 
@@ -195,6 +196,36 @@ def get_backbone(args: Namespace) -> MammothBackbone:
 
     return backbone_class(**parsed_args)
 
+
+def get_backbone_names(names_only=False):
+    """
+    Return the names of the available continual backbones.
+    If an error was detected while loading the available backbones, it raises the appropriate error message.
+
+    Args:
+        names_only (bool): whether to return only the names of the available backbones
+
+    Exceptions:
+        AssertError: if the backbone is not available
+        Exception: if an error is detected in the backbone
+
+    Returns:
+        the named of the available continual backbones
+    """
+
+    def _backbone_names():
+        names = {}  # key: backbone name, value: {'class': backbone class, 'parsable_args': parsable_args}
+        for backbone, backbone_conf in REGISTERED_BACKBONES.items():
+            names[backbone.replace('_', '-')] = {'class': backbone_conf['class'], 'parsable_args': backbone_conf['parsable_args']}
+
+        return names
+
+    if not hasattr(get_backbone_names, 'names'):
+        setattr(get_backbone_names, 'names', _backbone_names())
+    names = getattr(get_backbone_names, 'names')
+    if names_only:
+        return list(names.keys())
+    return names
 
 # import all files in the backbone folder to register the networks
 for file in os.listdir(os.path.dirname(__file__)):

@@ -13,6 +13,16 @@
             "console": "integratedTerminal",
             "args":"--model sgd --dataset seq-cifar10 --n_epochs 1 --batch_size 32 --lr=0.1 --debug_mode=1",
             "cwd": "${workspaceFolder}/mammoth",
+        },
+        {
+            "name": "basics",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "basics.py",
+            "justMyCode": false,
+            "console": "integratedTerminal",
+            // "args":"--model sgd --dataset seq-cifar10 --n_epochs 1 --batch_size 32 --lr=0.1 --debug_mode=1",
+            "cwd": "${workspaceFolder}/examples/notebooks",
         }
     ]
 }

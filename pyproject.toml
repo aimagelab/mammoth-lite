@@ -25,6 +25,7 @@ root = "./mammoth"
 
 [dependency-groups]
 dev = [
+    "ipywidgets>=8.1.7",
     "pytest>=8.3.5",
     "types-six>=1.17.0.20250515",
     "types-tqdm>=4.67.0.20250516",
@@ -42,3 +43,6 @@ filterwarnings = [
     "ignore::Warning",
     "ignore::SyntaxWarning",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"*.py" = ["E402", "F403"]

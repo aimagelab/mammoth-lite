@@ -11,7 +11,7 @@ from argparse import ArgumentParser
 from backbone import REGISTERED_BACKBONES
 from datasets import get_dataset_names
 from models import get_all_models
-from . import binary_to_boolean_type
+from . import binary_to_boolean_type # type: ignore
 
 
 def add_initial_args(parser) -> ArgumentParser:

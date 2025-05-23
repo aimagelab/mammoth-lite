@@ -3,8 +3,13 @@ import math
 from argparse import Namespace
 from typing import Iterable
 import logging
+import sys
 import torch
-from tqdm import tqdm
+# Check if we're in a notebook environment
+if 'ipykernel' in sys.modules:
+    from tqdm.notebook import tqdm
+else:
+    from tqdm import tqdm
 
 from datasets.utils.continual_dataset import ContinualDataset
 from models.utils.continual_model import ContinualModel

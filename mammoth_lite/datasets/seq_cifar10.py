@@ -7,6 +7,7 @@ from PIL import Image
 from torchvision.datasets import CIFAR10
 
 from utils.conf import base_path
+from datasets import register_dataset
 from datasets.utils.denormalization import DeNormalize
 from datasets.utils.continual_dataset import (ContinualDataset, store_masked_loaders, MammothDataset)
 
@@ -58,6 +59,7 @@ class MyCIFAR10(MammothDataset, CIFAR10):
         return img, target, not_aug_img
 
 
+@register_dataset(name='seq-cifar10')
 class SequentialCIFAR10(ContinualDataset):
     """Sequential CIFAR10 Dataset.
 

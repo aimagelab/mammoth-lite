@@ -2,8 +2,10 @@
 This module implements the simplest form of incremental training, i.e., finetuning.
 """
 
+from models import register_model
 from models.utils.continual_model import ContinualModel
 
+@register_model('sgd')
 class Sgd(ContinualModel):
     """
     Finetuning baseline - simple incremental training.

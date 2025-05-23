@@ -7,10 +7,9 @@ Datasets can be included either by registering them using the `register_dataset`
 import os
 from typing import Callable, Tuple, Type
 import importlib
-import inspect
 from argparse import Namespace
 
-from utils import register_dynamic_module_fn, infer_args_from_signature
+from utils import register_dynamic_module_fn
 from datasets.utils.continual_dataset import ContinualDataset
 
 REGISTERED_DATASETS: dict[str, dict] = dict()  # dictionary containing the registered datasets. Template: {name: {'class': class, 'parsable_args': parsable_args}}
@@ -32,17 +31,6 @@ def register_dataset(name: str) -> Callable:
 
     return register_dynamic_module_fn(name, REGISTERED_DATASETS)
 
-
-def get_all_datasets_legacy():
-    """
-    Returns the list of all the available datasets in the datasets folder that follow the old naming convention.
-    """
-    basepath: str = os.getenv("MAMMOTH_BASE_PATH", '.')
-
-    return [model.split('.')[0] for model in os.listdir(os.path.join(basepath, 'datasets'))
-            if not model.find('__') > -1 and 'py' in model]
-
-
 def get_dataset_names(names_only=False):
     """
     Return the names of the available continual dataset.
@@ -63,34 +51,6 @@ def get_dataset_names(names_only=False):
         names = {}  # key: dataset name, value: {'class': dataset class, 'parsable_args': parsable_args}
         for dataset, dataset_conf in REGISTERED_DATASETS.items():
             names[dataset.replace('_', '-')] = {'class': dataset_conf['class'], 'parsable_args': dataset_conf['parsable_args']}
-
-        base_class_signature = inspect.signature(ContinualDataset.__init__)
-        for dataset in get_all_datasets_legacy():  # for the datasets that follow the old naming convention, load the dataset class and check for errors
-            if dataset in names:  # dataset registered with the new convention has priority
-                continue
-
-            try:
-                mod = importlib.import_module('datasets.' + dataset)
-                dataset_classes_name = [x for x in mod.__dir__() if 'type' in str(type(getattr(mod, x)))
-                                        and 'ContinualDataset' in str(inspect.getmro(getattr(mod, x))[1:]) and 'GCLDataset' not in str(inspect.getmro(getattr(mod, x)))]
-                for d in dataset_classes_name:
-                    c = getattr(mod, d)
-                    signature = inspect.signature(c.__init__)
-                    parsable_args = infer_args_from_signature(signature, excluded_signature=base_class_signature)
-
-                    names[c.NAME.replace('_', '-')] = {'class': c, 'parsable_args': parsable_args}
-
-                gcl_dataset_classes_name = [x for x in mod.__dir__() if 'type' in str(type(getattr(mod, x))) and 'GCLDataset' in str(inspect.getmro(getattr(mod, x))[1:])]
-                for d in gcl_dataset_classes_name:
-                    c = getattr(mod, d)
-                    signature = inspect.signature(c.__init__)
-                    parsable_args = infer_args_from_signature(signature, excluded_signature=base_class_signature)
-
-                    names[c.NAME.replace('_', '-')] = {'class': c, 'parsable_args': parsable_args}
-
-            except Exception as e:  # if an error is detected, raise the appropriate error message
-                print(f'Error in dataset {dataset}')
-                names[dataset.replace('_', '-')] = e
         return names
 
     if not hasattr(get_dataset_names, 'names'):
@@ -139,10 +99,10 @@ def get_dataset(args: Namespace) -> ContinualDataset:
         the continual dataset instance
     """
     dataset_class, dataset_args = get_dataset_class(args)
-    missing_args = [arg for arg in dataset_args.keys() if arg not in vars(args)]
+    missing_args = [arg for arg in dataset_args.keys() if arg not in vars(args) and arg != 'args']
     assert len(missing_args) == 0, "Missing arguments for the dataset: " + ', '.join(missing_args)
 
-    parsed_args = {arg: getattr(args, arg) for arg in dataset_args.keys()}
+    parsed_args = {arg: getattr(args, arg) for arg in dataset_args.keys() if arg != 'args'}
 
     return dataset_class(args, **parsed_args)
 
