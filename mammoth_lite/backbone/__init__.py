@@ -1,18 +1,19 @@
+from abc import abstractmethod
 from argparse import Namespace
 import importlib
-import inspect
 import os
 import math
 
 import torch
 import torch.nn as nn
 
-from typing import Callable, Tuple, Union
+from typing import Callable, Literal, Tuple, Union
 
 from utils import register_dynamic_module_fn
 
 REGISTERED_BACKBONES: dict[str, dict] = dict()  # dictionary containing the registered networks. Template: {name: {'class': class, 'parsable_args': parsable_args}}
 
+ReturnTypes = Literal['out', 'features', 'both']
 
 def xavier(m: nn.Module) -> None:
     """
@@ -77,13 +78,14 @@ class MammothBackbone(nn.Module):
         self.device = device
         return self
 
-    def forward(self, x: torch.Tensor, returnt='out') -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor, Tuple[torch.Tensor, ...]]]:
+    @abstractmethod
+    def forward(self, x: torch.Tensor, returnt: ReturnTypes = "out") -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor, Tuple[torch.Tensor, ...]]]:
         """
         Compute a forward pass.
 
         Args:
             x: input tensor (batch_size, *input_shape)
-            returnt: return type (a string among `out`, `features`, `both`, or `all`)
+            returnt: return type (a string among `out`, `features`, or `both`)
 
         Returns:
             output tensor

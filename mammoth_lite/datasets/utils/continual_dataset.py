@@ -1,6 +1,6 @@
 from argparse import Namespace
 import os
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -27,7 +27,6 @@ class ContinualDataset(object):
         N_CLASSES_PER_TASK (int): the number of classes per task
         N_TASKS (int): the number of tasks
         N_CLASSES (int): the number of classes
-        SIZE (Tuple[int]): the size of the dataset
         AVAIL_SCHEDS (List[str]): the available schedulers
         class_names (List[str]): list of the class names of the dataset (should be populated by `get_class_names`)
         train_loader (DataLoader): the training loader
@@ -43,7 +42,6 @@ class ContinualDataset(object):
     N_CLASSES_PER_TASK: int
     N_TASKS: int
     N_CLASSES: int
-    SIZE: Tuple[int]
 
     log_fn: Callable
     train_loader: torch.utils.data.DataLoader
@@ -74,6 +72,12 @@ class ContinualDataset(object):
                 # bit more tricky, not supported for now
                 raise NotImplementedError('Joint training is only supported for class-il and task-il.'
                                           'For other settings, please use the `joint` model with `--model=joint` and `--joint=0`')
+
+    def reset(self) -> None:
+        """Resets the dataset to the initial state, i.e., before any task has been seen."""
+        self.c_task = -1
+        self.train_loader = None
+        self.test_loaders = []
 
     def get_offsets(self, c_task: Optional[int] = None) -> Tuple[int, int]:
         if c_task is None:
@@ -111,14 +115,14 @@ class ContinualDataset(object):
         raise NotImplementedError
 
     @classmethod
-    def get_transform(cls) -> nn.Module:
+    def get_transform(cls) -> Union[nn.Module,transforms.Compose]:
         """Returns the transform to be used for the current dataset."""
         transform = transforms.Compose(
             [transforms.ToPILImage(), cls.TRANSFORM])
         return transform
 
     @staticmethod
-    def get_loss() -> nn.Module:
+    def get_loss() -> Callable:
         """Returns the loss to be used for the current dataset. By default, it returns the cross entropy loss."""
         return F.cross_entropy
 

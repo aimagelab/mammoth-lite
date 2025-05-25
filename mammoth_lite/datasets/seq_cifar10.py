@@ -16,6 +16,7 @@ class MyCIFAR10(MammothDataset, CIFAR10):
 
     def __init__(self, root, train=True, transform=None, target_transform=None) -> None:
         # not self._check_integrity() -> trick to avoid printing debug messages
+        self.root = root
         super(MyCIFAR10, self).__init__(root, train, transform, target_transform, download=not self._check_integrity())
 
     def __getitem__(self, index: int) -> Tuple[Image.Image, int, Image.Image]:
@@ -55,7 +56,6 @@ class SequentialCIFAR10(ContinualDataset):
         N_CLASSES_PER_TASK (int): number of classes per task.
         N_TASKS (int): number of tasks.
         N_CLASSES (int): number of classes.
-        SIZE (tuple): size of the images.
         MEAN (tuple): mean of the dataset.
         STD (tuple): standard deviation of the dataset.
         TRANSFORM (torchvision.transforms): transformations to apply to the dataset.
@@ -66,7 +66,6 @@ class SequentialCIFAR10(ContinualDataset):
     N_CLASSES_PER_TASK = 2
     N_TASKS = 5
     N_CLASSES = N_CLASSES_PER_TASK * N_TASKS
-    SIZE = (32, 32)
     MEAN, STD = (0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2615)
     TRANSFORM = transforms.Compose(
         [transforms.RandomCrop(32, padding=4),
@@ -78,10 +77,8 @@ class SequentialCIFAR10(ContinualDataset):
 
     def get_data_loaders(self):
         """Class method that returns the train and test loaders."""
-        train_dataset = MyCIFAR10(base_path() + 'CIFAR10', train=True,
-                                  download=True, transform=self.TRANSFORM)
-        test_dataset = MyCIFAR10(base_path() + 'CIFAR10', train=False,
-                                download=True, transform=self.TEST_TRANSFORM)
+        train_dataset = MyCIFAR10(base_path() + 'CIFAR10', train=True, transform=self.TRANSFORM)
+        test_dataset = MyCIFAR10(base_path() + 'CIFAR10', train=False, transform=self.TEST_TRANSFORM)
 
         return train_dataset, test_dataset
 

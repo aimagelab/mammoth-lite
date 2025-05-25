@@ -69,6 +69,8 @@ def train(model: ContinualModel, dataset: ContinualDataset,
         args = Namespace(**json.loads(env_args))
         os.environ['MAMMOTH_ARGS'] = json.dumps(vars(args))
 
+    dataset.reset() # reset the dataset to the initial state
+
     model.net.to(model.device)
     torch.cuda.empty_cache()
 

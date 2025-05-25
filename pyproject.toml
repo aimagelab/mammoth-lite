@@ -17,11 +17,11 @@ url = "https://download.pytorch.org/whl/cu118"
 name = "torch"
 
 [tool.mypy]
-mypy_path = "mammoth"
+mypy_path = "mammoth_lite"
 python_executable = '.venv/bin/python'
 
 [tool.ty.src]
-root = "./mammoth"
+root = "./mammoth_lite"
 
 [dependency-groups]
 dev = [
@@ -46,3 +46,4 @@ filterwarnings = [
 
 [tool.ruff.lint.per-file-ignores]
 "*.py" = ["E402", "F403"]
+"*.ipynb" = ["E402", "F403"]
