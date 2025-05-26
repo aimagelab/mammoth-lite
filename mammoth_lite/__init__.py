@@ -13,6 +13,8 @@ from backbone import get_backbone_names, register_backbone, MammothBackbone, Ret
 from utils.utils import load_runner, get_avail_args
 from utils.training import train
 from utils.conf import base_path, get_device
+from utils.buffer import Buffer
+from utils.args import add_rehearsal_args
 
 # API:
 # - get all datasets, backbones, models by name
@@ -36,4 +38,6 @@ __all__ = [
     "base_path",
     "get_device",
     "ReturnTypes",
+    "Buffer",
+    "add_rehearsal_args",
 ]

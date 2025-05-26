@@ -108,16 +108,16 @@ Key Components Explained
 **COMPATIBILITY Attribute**
   Specifies which continual learning scenarios your model supports:
   
-  * ``'class-il'``: Class-incremental learning
+  * ``'class-il'``: Class-incremental learning. This is also the default and most common scenario.
   * ``'task-il'``: Task-incremental learning  
-  * ``'domain-il'``: Domain-incremental learning
+  * More scenarios are available in the full Mammoth framework.
 
 **observe Method Arguments**
   
   * ``inputs``: Augmented training images (data augmentation applied)
   * ``labels``: Ground truth class labels
-  * ``not_aug_inputs``: Original images without augmentation (useful for some algorithms)
-  * ``epoch``: Current epoch number (useful for scheduling)
+  * ``not_aug_inputs``: Original images without augmentation (useful for replay-based algorithms)
+  * ``epoch``: (optional) Current epoch number (useful for scheduling)
 
 Testing Your Custom Model
 -------------------------
@@ -147,11 +147,12 @@ Once defined, you can use your custom model like any built-in model:
 .. code-block:: text
 
    Task 1: 100%|██████████| 1563/1563 [01:20<00:00, 19.42it/s]
-   Accuracy on task 1: 67.8%
+   Accuracy on task 1:	[Class-IL]: 68.20 	[Task-IL]: 68.20
    
    Task 2: 100%|██████████| 1563/1563 [01:18<00:00, 19.95it/s]  
-   Accuracy on task 1: 24.6%  # Catastrophic forgetting
-   Accuracy on task 2: 69.1%
+   Accuracy on task 2:	[Class-IL]: 32.90 	[Task-IL]: 62.62
+
+   ...
 
 Advanced Custom Model Example
 -----------------------------
@@ -160,86 +161,69 @@ Let's create a more sophisticated model that uses experience replay to mitigate 
 
 .. code-block:: python
 
-   import torch
-   from mammoth_lite import register_model, ContinualModel
+    from argparse import ArgumentParser
+    from mammoth_lite import register_model, ContinualModel, Buffer, add_rehearsal_args
 
-   @register_model('simple-replay')
-   class SimpleReplay(ContinualModel):
-       """
-       A simple experience replay model.
-       
-       Stores a small buffer of previous examples and replays
-       them when learning new tasks to reduce forgetting.
-       """
-       
-       def __init__(self, backbone, loss, args, device):
-           super().__init__(backbone, loss, args, device)
-           
-           # Initialize experience buffer
-           self.buffer_size = getattr(args, 'buffer_size', 500)
-           self.buffer_inputs = []
-           self.buffer_labels = []
-           
-           # Replay parameters
-           self.replay_ratio = getattr(args, 'replay_ratio', 0.5)
-           
-       def observe(self, inputs, labels, not_aug_inputs, epoch=None):
-           """
-           Training step with experience replay.
-           """
-           self.net.train()
-           
-           # Standard training on current batch
-           self.opt.zero_grad()
-           outputs = self.net(inputs)
-           loss = self.loss(outputs, labels)
-           
-           # Add replay loss if buffer has examples
-           if len(self.buffer_inputs) > 0:
-               replay_loss = self._get_replay_loss()
-               total_loss = loss + self.replay_ratio * replay_loss
-           else:
-               total_loss = loss
-           
-           total_loss.backward()
-           self.opt.step()
-           
-           # Update buffer with current examples
-           self._update_buffer(not_aug_inputs, labels)
-           
-           return total_loss.item()
-       
-       def _get_replay_loss(self):
-           """Compute loss on replayed examples."""
-           # Sample from buffer
-           n_replay = min(len(self.buffer_inputs), 32)
-           indices = torch.randperm(len(self.buffer_inputs))[:n_replay]
-           
-           replay_inputs = torch.stack([self.buffer_inputs[i] for i in indices])
-           replay_labels = torch.stack([self.buffer_labels[i] for i in indices])
-           
-           replay_inputs = replay_inputs.to(self.device)
-           replay_labels = replay_labels.to(self.device)
-           
-           # Forward pass on replay data
-           replay_outputs = self.net(replay_inputs)
-           replay_loss = self.loss(replay_outputs, replay_labels)
-           
-           return replay_loss
-       
-       def _update_buffer(self, inputs, labels):
-           """Add new examples to buffer, removing oldest if necessary."""
-           batch_size = inputs.size(0)
-           
-           for i in range(batch_size):
-               # Add to buffer
-               self.buffer_inputs.append(inputs[i].cpu())
-               self.buffer_labels.append(labels[i].cpu())
-               
-               # Remove oldest if buffer is full
-               if len(self.buffer_inputs) > self.buffer_size:
-                   self.buffer_inputs.pop(0)
-                   self.buffer_labels.pop(0)
+    @register_model('experience-replay')
+    class SimpleReplay(ContinualModel):
+        """
+        A simple experience replay model.
+        
+        Stores a small buffer of previous examples and replays
+        them when learning new tasks to reduce forgetting.
+        """
+
+        @staticmethod
+        def get_parser(parser: ArgumentParser):
+            """
+            This method is used to define additional command line arguments for the model.
+            It is called by the `load_runner` function to parse the arguments.
+            """
+
+            add_rehearsal_args(parser)  # This includes the `buffer_size` and `minibatch_size` arguments
+            parser.add_argument('--alpha', type=float, default=0.5,
+                                help='Weight of replay loss in total loss')
+            return parser
+        
+        def __init__(self, backbone, loss, args, device, dataset):
+            super().__init__(backbone, loss, args, device, dataset)
+            
+            # Initialize experience buffer
+            self.buffer = Buffer(
+                buffer_size=args.buffer_size  # Custom buffer size
+            )
+            
+        def observe(self, inputs, labels, not_aug_inputs, epoch=None):
+            """
+            Training step with experience replay.
+            """
+            self.net.train()
+            
+            # Standard training on current batch
+            self.opt.zero_grad()
+            outputs = self.net(inputs)
+            loss = self.loss(outputs, labels)
+            
+            # Sample a batch from the buffer
+            if len(self.buffer) > 0:
+                buffer_inputs, buffer_labels = self.buffer.get_data(
+                    size=self.args.minibatch_size, device=self.device)
+                
+                # Forward pass on the buffer data
+                buffer_outputs = self.net(buffer_inputs)
+                # Compute the loss on the buffer data
+                buffer_loss = self.loss(buffer_outputs, buffer_labels)
+                # Combine the losses from the current batch and the buffer
+                loss = loss + self.args.alpha * buffer_loss
+
+            # backward pass and update the weights
+            loss.backward()
+            self.opt.step()
+            
+            # Store the current batch in the buffer
+            self.buffer.add_data(inputs, labels)
+            
+            return total_loss.item()
 
 Using the Advanced Model
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -257,54 +241,13 @@ Your replay model can now be used with additional parameters:
            'n_epochs': 2,
            'batch_size': 32,
            'buffer_size': 1000,      # Custom parameter
-           'replay_ratio': 0.5       # Custom parameter  
+           'alpha': 0.5       # Custom parameter
+           'minibatch_size': 32  # Size of replay batch
        }
    )
 
    train(model, dataset)
 
-Model Implementation Patterns
------------------------------
-
-Common Patterns
-~~~~~~~~~~~~~~~
-
-**Memory-based Methods**
-
-.. code-block:: python
-
-   def __init__(self, backbone, loss, args, device):
-       super().__init__(backbone, loss, args, device)
-       self.memory_buffer = []  # Store previous examples
-       
-   def observe(self, inputs, labels, not_aug_inputs, epoch=None):
-       # Train on current data + replay from memory
-       pass
-
-**Regularization-based Methods**
-
-.. code-block:: python
-
-   def __init__(self, backbone, loss, args, device):
-       super().__init__(backbone, loss, args, device)
-       self.previous_weights = None  # Store important weights
-       
-   def observe(self, inputs, labels, not_aug_inputs, epoch=None):
-       # Add regularization term to prevent weight changes
-       main_loss = self.loss(self.net(inputs), labels)
-       reg_loss = self._compute_regularization()
-       total_loss = main_loss + reg_loss
-       pass
-
-**Meta-learning Methods**
-
-.. code-block:: python
-
-   def observe(self, inputs, labels, not_aug_inputs, epoch=None):
-       # Implement MAML-style meta-learning updates
-       # Fast adaptation on current task
-       # Meta-update to preserve previous knowledge
-       pass
 
 Adding Custom Arguments
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -317,183 +260,23 @@ You can add custom arguments for your model:
 
    @register_model('my-model')
    class MyModel(ContinualModel):
-       def __init__(self, backbone, loss, args, device):
-           super().__init__(backbone, loss, args, device)
-           
-           # Access custom arguments
-           self.custom_param = getattr(args, 'custom_param', 1.0)
-           self.another_param = getattr(args, 'another_param', 'default')
-
-Testing and Validation
-----------------------
-
-Unit Testing Your Model
-~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   def test_custom_model():
-       """Test that custom model can be loaded and trained."""
-       from mammoth_lite import load_runner, train
        
-       # Test loading
-       model, dataset = load_runner(
-           'new-sgd', 
-           'seq-cifar10',
-           {'n_epochs': 1}
-       )
-       
-       assert model is not None
-       assert dataset is not None
-       
-       # Test that training doesn't crash
-       try:
-           train(model, dataset)
-           print("✓ Model works correctly")
-       except Exception as e:
-           print(f"✗ Model failed: {e}")
-
-   test_custom_model()
-
-Comparing Models
-~~~~~~~~~~~~~~~~
-
-Compare your custom model against baselines:
-
-.. code-block:: python
-
-   def compare_models():
-       """Compare custom model against SGD baseline."""
-       
-       results = {}
-       
-       for model_name in ['sgd', 'new-sgd', 'simple-replay']:
-           print(f"\\nTesting {model_name}...")
-           model, dataset = load_runner(
-               model_name, 
-               'seq-cifar10',
-               {'n_epochs': 1}
-           )
-           # Run and collect results
-           # results[model_name] = evaluate(model, dataset)
-       
-       # Compare results
-       # print("Model comparison:", results)
-
-   compare_models()
-
-Best Practices
---------------
-
-**Error Handling**
-
-.. code-block:: python
-
-   def observe(self, inputs, labels, not_aug_inputs, epoch=None):
-       try:
-           # Your training logic
-           pass
-       except RuntimeError as e:
-           print(f"Training error: {e}")
-           return float('inf')  # Return high loss on error
-
-**Memory Management**
-
-.. code-block:: python
-
-   def observe(self, inputs, labels, not_aug_inputs, epoch=None):
-       # Clear unnecessary gradients
-       self.opt.zero_grad()
-       
-       # Your training logic
-       
-       # Clean up if needed
-       torch.cuda.empty_cache()  # For GPU memory
-
-**Logging and Monitoring**
-
-.. code-block:: python
-
-   def observe(self, inputs, labels, not_aug_inputs, epoch=None):
-       # Your training logic
-       loss_value = loss.item()
-       
-       # Optional: Log additional metrics
-       if hasattr(self, 'task_losses'):
-           self.task_losses.append(loss_value)
-       
-       return loss_value
-
-Complete Example Script
------------------------
-
-.. code-block:: python
-
-   """
-   Complete example: Creating and testing a custom continual learning model
-   """
-
-   from mammoth_lite import register_model, ContinualModel, load_runner, train
-   import torch
-
-   @register_model('my-custom-sgd')
-   class MyCustomSgd(ContinualModel):
-       """Custom SGD model with additional logging."""
-       
-       def __init__(self, backbone, loss, args, device):
-           super().__init__(backbone, loss, args, device)
-           self.training_losses = []
-           
-       def observe(self, inputs, labels, not_aug_inputs, epoch=None):
-           self.net.train()
-           self.opt.zero_grad()
-           
-           outputs = self.net(inputs)
-           loss = self.loss(outputs, labels)
-           
-           loss.backward()
-           self.opt.step()
-           
-           loss_value = loss.item()
-           self.training_losses.append(loss_value)
-           
-           return loss_value
-
-   # Test the custom model
-   print("Testing custom model...")
-   model, dataset = load_runner(
-       'my-custom-sgd',
-       'seq-cifar10', 
-       {'n_epochs': 1, 'lr': 0.1}
-   )
-
-   train(model, dataset)
-   print(f"Average training loss: {sum(model.training_losses) / len(model.training_losses):.4f}")
-
-Common Issues and Solutions
----------------------------
-
-**Model Not Found Error**
-  Make sure you've run the cell with ``@register_model`` before trying to use it.
-
-**GPU Memory Issues**  
-  Add ``torch.cuda.empty_cache()`` in your observe method.
-
-**Slow Training**
-  Check that you're not accidentally keeping gradients or large tensors in memory.
-
-**Gradient Explosion**
-  Add gradient clipping: ``torch.nn.utils.clip_grad_norm_(self.net.parameters(), 1.0)``
+       def get_parser(parser):
+           """
+           Add custom arguments for this model.
+           """
+           parser.add_argument('--my_custom_arg', type=int, default=42,
+                               help='An example custom argument')
+           return parser
 
 Next Steps
 ----------
 
 Now that you can create custom models:
 
-1. **Implement Advanced Algorithms**: Try implementing rehearsal, regularization, or meta-learning methods
+1. **Implement Advanced Algorithms**: Try implementing additional rehearsal methods, such as Dark Experience Replay, or regularization methods such as Learning without Forgetting. You can find their complete code in the `models/` directory.
 2. **Create Custom Datasets**: Learn to build custom benchmarks in :doc:`custom_dataset`
 3. **Design Custom Backbones**: Explore custom architectures in :doc:`custom_backbone`  
-4. **Advanced Evaluation**: Set up comprehensive evaluation and analysis
-5. **Contribute**: Share your models with the Mammoth Lite community
+4. **Contribute**: Share your models with the Mammoth Lite community
 
 The ability to create custom models opens up endless possibilities for continual learning research. Experiment with different approaches and see how they perform on various benchmarks!

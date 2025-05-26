@@ -5,7 +5,7 @@ from typing import Any, Tuple, TYPE_CHECKING
 
 from .args import add_initial_args, add_management_args, add_experiment_args, add_rehearsal_args
 
-from models import get_model
+from models import get_model, get_model_class
 from datasets import get_dataset
 from backbone import get_backbone
 
@@ -47,8 +47,8 @@ def initalize_args(model_name: str, dataset_name: str, args: dict[str, Any]) -> 
     add_management_args(parser)
     add_experiment_args(parser)
 
-    if 'buffer_size' in args:
-        add_rehearsal_args(parser)
+    model_class = get_model_class(Namespace(model=model_name))
+    model_class.get_parser(parser)
 
     exp_str = [f"--{k}={v}" for k, v in args.items() if k not in ['model', 'dataset', 'backbone'] and v is not None]
     exp_str += ['--dataset', dataset_name, '--model', model_name]
