@@ -1,7 +1,7 @@
 import importlib
 import os
 from argparse import Namespace
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING, Union
 from torch import nn
 
 from utils import register_dynamic_module_fn
@@ -73,7 +73,7 @@ def get_model_names(names_only=False):
     return names
 
 
-def get_model(args: Namespace, backbone: nn.Module, loss: nn.Module, transform: 'Compose', dataset: 'ContinualDataset') -> 'ContinualModel':
+def get_model(args: Namespace, backbone: nn.Module, loss: nn.Module, transform: Union['Compose', nn.Module], dataset: 'ContinualDataset') -> 'ContinualModel':
     """
     Return the class of the selected continual model among those that are available.
     If an error was detected while loading the available models, it raises the appropriate error message.

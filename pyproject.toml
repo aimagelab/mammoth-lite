@@ -12,6 +12,11 @@ dependencies = [
     "tqdm",
 ]
 
+[tool.setuptools.packages.find]
+include = [
+    "mammoth_lite"
+]
+
 [[tool.uv.index]]
 url = "https://download.pytorch.org/whl/cu118"
 name = "torch"

@@ -122,8 +122,7 @@ def main(args=None):
     if args is None:
         args = parse_args()
 
-    device = get_device()
-    args.device = device
+    args.device = get_device() if args.device is None else args.device
 
     dataset = get_dataset(args)
 

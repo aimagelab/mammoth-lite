@@ -7,15 +7,9 @@ The `begin_task` and `end_task` methods are called before and after each task, r
 
 The `get_parser` method returns the parser of the model. Additional model-specific hyper-parameters can be added by overriding this method.
 
-The `get_debug_iters` method returns the number of iterations to be used for debugging. Default: 3.
-
 The `get_optimizer` method returns the optimizer to be used for training. Default: SGD.
 
 The `load_buffer` method is called when a buffer is loaded. Default: do nothing.
-
-The `meta_observe`, `meta_begin_task` and `meta_end_task` methods are wrappers for `observe`, `begin_task` and `end_task` methods, respectively. They take care of updating the internal counters and of logging to wandb if installed.
-
-The `autolog_wandb` method is used to automatically log to wandb all variables starting with "_wandb_" or "loss" in the observe function. It is called by `meta_observe` if wandb is installed. It can be overridden to add custom logging.
 """
 
 from abc import abstractmethod

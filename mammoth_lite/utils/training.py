@@ -93,15 +93,11 @@ def train(model: ContinualModel, dataset: ContinualDataset,
 
             model.begin_task(dataset)
 
-            train_pbar = tqdm(train_loader, total=len(train_loader), mininterval=0.1)
-            print(f"Task {t + 1}")  # at least print the task number
+            with tqdm(train_loader, total=len(train_loader) * args.n_epochs, mininterval=0.1) as train_pbar:
+                for epoch in range(args.n_epochs):
+                    train_pbar.set_description(f"Task {t + 1} - Epoch {epoch + 1}")
 
-            for epoch in range(args.n_epochs):
-                train_pbar.set_description(f"Task {t + 1} - Epoch {epoch + 1}")
-
-                train_epoch(model, train_loader, args, pbar=train_pbar, epoch=epoch)
-
-            train_pbar.close()
+                    train_epoch(model, train_loader, args, pbar=train_pbar, epoch=epoch)
 
             model.end_task(dataset)
 

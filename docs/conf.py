@@ -9,7 +9,7 @@ mammoth_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, mammoth_path)
 os.chdir(mammoth_path)
 
-project = 'Mammoth-Lite'
+project = 'Mammoth Lite'
 author = 'Lorenzo Bonicelli, Pietro Buzzega, Matteo Boschini, Aniello Panariello, Davide Abati, Angelo Porrello, Simone Calderara'
 copyright = f'{date.today().year}, {author}'
 
@@ -75,7 +75,7 @@ pygments_style = 'friendly'
 
 # html_theme = 'alabaster'
 html_theme = "furo"
-html_title = "Mammoth-Lite"
+html_title = "Mammoth Lite"
 html_static_path = ['static']
 html_favicon = 'static/mammoth_logo.svg'
 
