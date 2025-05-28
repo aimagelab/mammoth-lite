@@ -14,14 +14,12 @@ Module attributes and functions
 .. autosummary::
    :recursive:
    :toctree:
-   :hidden:
    :template: custom-module-template.rst
    {% for item in modules | reorder_modules %}
    {{ item }}
    {%- endfor %}
 
 .. toctree::
-   :hidden:
    {% for item in modules | reorder_modules %}
    {{ item | parse_toctree_name }} <{{ item }}.rst>
    {%- endfor %}

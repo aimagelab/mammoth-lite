@@ -10,9 +10,9 @@ Continual Learning (also known as Lifelong Learning or Incremental Learning) is 
 
 Key challenges in continual learning include:
 
-* **Catastrophic Forgetting**: The tendency of neural networks to forget previously learned tasks when learning new ones
-* **Task Interference**: When learning a new task negatively affects performance on previous tasks
-* **Memory Constraints**: Limited storage for previous data or experiences
+* **Catastrophic Forgetting**: The tendency of neural networks to forget previously learned tasks when learning new ones  
+* **Task Interference**: When learning a new task negatively affects performance on previous tasks  
+* **Memory Constraints**: Limited storage for previous data or experiences  
 * **Plasticity-Stability Dilemma**: Balancing the ability to learn new information while preserving old knowledge
 
 What is Mammoth Lite?
@@ -20,9 +20,9 @@ What is Mammoth Lite?
 
 Mammoth Lite is a simplified framework designed to make continual learning research more accessible. It provides:
 
-* **Simple API**: Easy-to-use functions for loading models, datasets, and running experiments
-* **Modular Design**: Easily extendable with custom models, datasets, and backbones
-* **Educational Focus**: Clear examples and documentation for learning continual learning concepts
+* **Simple API**: Easy-to-use functions for loading models, datasets, and running experiments  
+* **Modular Design**: Easily extendable with custom models, datasets, and backbones  
+* **Educational Focus**: Clear examples and documentation for learning continual learning concepts  
 * **Minimal Dependencies**: Lightweight installation with essential dependencies only
 
 Key Features

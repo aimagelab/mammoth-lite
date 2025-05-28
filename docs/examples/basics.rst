@@ -11,20 +11,20 @@ Learning Objectives
 
 By the end of this example, you'll understand:
 
-* How to import and use the core Mammoth Lite functions
-* How to explore available arguments and their purposes  
-* How to load and configure models and datasets
-* How to run a basic continual learning experiment
-* How to interpret the results
+* How to import and use the core Mammoth Lite functions  
+* How to explore available arguments and their purposes    
+* How to load and configure models and datasets  
+* How to run a basic continual learning experiment  
+* How to interpret the results  
 
 Core Functions Overview
 -----------------------
 
 Mammoth Lite provides several key functions for continual learning experiments:
 
-* ``get_avail_args()``: Discover available arguments and their descriptions
-* ``load_runner()``: Load and configure a model-dataset pair
-* ``train()``: Execute the continual learning training process
+* ``get_avail_args()``: Discover available arguments and their descriptions  
+* ``load_runner()``: Load and configure a model-dataset pair  
+* ``train()``: Execute the continual learning training process  
 
 Let's explore each of these in detail.
 
@@ -73,9 +73,9 @@ Understanding Argument Types
 **Optional Arguments**  
   These have default values but can be customized to:
   
-  * Control training behavior (learning rate, epochs, batch size)
-  * Specify computational resources (device, number of workers)  
-  * Configure checkpointing
+  * Control training behavior (learning rate, epochs, batch size)  
+  * Specify computational resources (device, number of workers)    
+  * Configure checkpointing  
 
 Loading Models and Datasets
 ---------------------------
@@ -170,8 +170,8 @@ Key Observations
 
 **Catastrophic Forgetting**: Performance on previous tasks drops significantly
   
-  * Task 1 accuracy drops from 68.4% to 23.1% after learning Task 2
-  * This demonstrates the fundamental challenge in continual learning
+  * Task 1 accuracy drops from 68.4% to 23.1% after learning Task 2  
+  * This demonstrates the fundamental challenge in continual learning  
 
 **Task-IL vs Class-IL**: The accuracy drop is less significant for Task-IL compared to Class-IL. This is expected, as Task-IL assumes the model is given the task identity during inference, while Class-IL does not.
 
@@ -247,7 +247,7 @@ Variations to Try
    # Try more epochs per task
    model, dataset = load_runner('sgd', 'seq-cifar10', {'n_epochs': 5, 'batch_size': 32, 'lr': 0.1})
 
-**Different Models** (when available)
+**Different Models** (when available)  
 
 .. code-block:: python
 
@@ -255,7 +255,7 @@ Variations to Try
    from mammoth_lite import get_model_names
    print("Available models:", get_model_names())
 
-**Different Datasets** (when available)
+**Different Datasets** (when available)  
 
 .. code-block:: python
 

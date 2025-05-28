@@ -46,7 +46,7 @@ def num_flat_features(x: torch.Tensor) -> int:
     Returns:
         number of item from the second dimension onward
     """
-    size = x.size()[1:]
+    size: Tuple[int] = x.size()[1:] # type: ignore[invalid-assignment]
     num_features = 1
     for ff in size:
         num_features *= ff

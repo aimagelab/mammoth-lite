@@ -25,9 +25,9 @@ The easiest way to run an experiment is using the command line interface:
 
 This command:
 
-* Uses the **SGD** (Stochastic Gradient Descent) continual learning model, which is a simple baseline that learns sequentially without any special mechanisms to prevent forgetting.
-* Runs on the **Sequential CIFAR-10** benchmark.
-* Uses a learning rate of **0.1**, a batch size of **32**, and trains for **5 epochs per task**.
+* Uses the **SGD** (Stochastic Gradient Descent) continual learning model, which is a simple baseline that learns sequentially without any special mechanisms to prevent forgetting.  
+* Runs on the **Sequential CIFAR-10** benchmark.  
+* Uses a learning rate of **0.1**, a batch size of **32**, and trains for **5 epochs per task**.  
 
 You should see output showing the training progress across different tasks.
 
@@ -77,8 +77,8 @@ During training, you'll see output like this:
 
 This shows:
 
-* **Progress bars** for each task's training
-* **Accuracy**, measured as both Class-IL (class-incremental learning) and Task-IL (task-incremental learning)
+* **Progress bars** for each task's training  
+* **Accuracy**, measured as both Class-IL (class-incremental learning) and Task-IL (task-incremental learning)  
 
 
 Customizing Your Experiment
@@ -97,9 +97,9 @@ Let's try a more customized experiment:
 
 This sets:
 
-* Learning rate to 0.01
+* Learning rate to 0.01  
 * Batch size to 64  
-* Number of epochs per task to 10
+* Number of epochs per task to 10  
 
 Available Arguments
 ~~~~~~~~~~~~~~~~~~~
@@ -125,21 +125,21 @@ Common Arguments
 
 Here are some commonly used arguments:
 
-**Training Parameters:**
-* ``--lr``: Learning rate (default: 0.1)
+**Training Parameters:**  
+* ``--lr``: Learning rate (default: 0.1)  
 * ``--batch_size``: Batch size (default: 32)  
-* ``--n_epochs``: Epochs per task (default: 50)
+* ``--n_epochs``: Epochs per task (default: 50)  
 
-**Model Selection:**
-* ``--model``: Continual learning algorithm
-* ``--backbone``: Neural network architecture
+**Model Selection:**  
+* ``--model``: Continual learning algorithm  
+* ``--backbone``: Neural network architecture  
 
 **Dataset Options:**
 * ``--dataset``: Continual learning benchmark
 
-**Checkpoint Saving and Loading:**
-* ``--savecheck``: Enable saving the model checkpoint at the end of training (if set to `last`) or after eacfh task (if set to `task`)
-* ``--loadcheck``: Path to load a saved model checkpoint
+**Checkpoint Saving and Loading:**  
+* ``--savecheck``: Enable saving the model checkpoint at the end of training (if set to `last`) or after eacfh task (if set to `task`)  
+* ``--loadcheck``: Path to load a saved model checkpoint  
 
 
 Exploring Available Components
@@ -198,15 +198,15 @@ Next Steps
 
 Now that you've run your first experiments, you can:
 
-1. **Learn Core Concepts**: Understand the theory behind continual learning in :doc:`core_concepts`
-2. **Explore Examples**: See detailed examples in :doc:`examples/index`
-3. **Create Custom Components**: Build your own models, datasets, or backbones
-4. **Learn to use the complete Mammoth repo**: Check out the full Mammoth documentation at https://aimagelab.github.io/mammoth/ 
+1. **Learn Core Concepts**: Understand the theory behind continual learning in :doc:`core_concepts`  
+2. **Explore Examples**: See detailed examples in :doc:`examples/index`  
+3. **Create Custom Components**: Build your own models, datasets, or backbones  
+4. **Learn to use the complete Mammoth repo**: Check out the full Mammoth documentation at https://aimagelab.github.io/mammoth/  
 
 The examples section contains Jupyter notebooks that show how to:
 
-* Create custom continual learning models
-* Design new datasets
-* Implement custom neural network backbones
+* Create custom continual learning models  
+* Design new datasets  
+* Implement custom neural network backbones  
 
 Continue exploring to become proficient with continual learning and Mammoth Lite!

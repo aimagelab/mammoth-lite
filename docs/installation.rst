@@ -6,8 +6,8 @@ System Requirements
 
 Mammoth Lite requires:
 
-* **Python**: 3.10 or higher
-* **Operating System**: Linux, macOS, or Windows
+* **Python**: 3.10 or higher  
+* **Operating System**: Linux, macOS, or Windows  
 * **GPU**: Optional but recommended for faster training
 
 Dependencies
@@ -15,18 +15,18 @@ Dependencies
 
 Mammoth Lite has minimal dependencies to keep the framework lightweight:
 
-**Core Dependencies:**
-* ``torch`` - PyTorch for deep learning
-* ``torchvision`` - Computer vision utilities
-* ``numpy`` - Numerical computing
-* ``tqdm`` - Progress bars
-* ``gitpython`` - Git repository handling
-* ``six`` - Python 2/3 compatibility
+**Core Dependencies:**  
+* ``torch`` - PyTorch for deep learning  
+* ``torchvision`` - Computer vision utilities  
+* ``numpy`` - Numerical computing  
+* ``tqdm`` - Progress bars  
+* ``gitpython`` - Git repository handling  
+* ``six`` - Python 2/3 compatibility  
 
-**Development Dependencies:**
-* ``pytest`` - Testing framework
-* ``ipywidgets`` - Jupyter notebook widgets
-* ``mypy`` - Type checking
+**Development Dependencies:**  
+* ``pytest`` - Testing framework  
+* ``ipywidgets`` - Jupyter notebook widgets  
+* ``mypy`` - Type checking  
 
 Installation Methods
 --------------------

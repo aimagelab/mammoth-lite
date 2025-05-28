@@ -64,14 +64,12 @@
 .. autosummary::
    :recursive:
    :toctree:
-   :hidden:
    :template: custom-module-template.rst
    {% for item in modules | reorder_modules %}
    {{ item }}
    {%- endfor %}
 
 .. toctree::
-   :hidden:
 {% for item in modules | reorder_modules %}
    {{ item | get_item_name }} <{{ item }}>
 {%- endfor %}

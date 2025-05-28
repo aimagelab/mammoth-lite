@@ -27,11 +27,9 @@ Mammoth Lite is a lightweight and simplified version of the `Mammoth <https://gi
 
    core_concepts
    examples/index
-   tutorials/index
 
-.. Indices and tables
-.. ==================
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference
 
-.. * :ref:`genindex`
-.. * :ref:`modindex`
-.. * :ref:`search`
+   api/index

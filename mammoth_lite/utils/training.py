@@ -104,7 +104,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
             accs = evaluate(model, dataset)
 
             mean_acc = np.mean(accs, axis=1)
-            print(f'Accuracy for task {t + 1}\t[Class-IL]: {mean_acc[0]:.2f} \t[Task-IL]: {mean_acc[1]:.2f}')
+            print(f'Accuracy for task {t + 1}\t[Class-IL]: {mean_acc[0]:.2f}% \t[Task-IL]: {mean_acc[1]:.2f}%')
 
             results.append(accs[0])
             results_mask_classes.append(accs[1])

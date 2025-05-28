@@ -5,7 +5,8 @@ from importlib import import_module
 from jinja2.filters import FILTERS
 from datetime import date
 
-mammoth_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+basepath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+mammoth_path = os.path.join(basepath, 'mammoth_lite')
 sys.path.insert(0, mammoth_path)
 os.chdir(mammoth_path)
 

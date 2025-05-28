@@ -4,18 +4,19 @@ Creating Custom Models
 This example shows how to create custom continual learning algorithms in Mammoth Lite. You'll learn to implement your own model, register it with the framework, and use it in experiments.
 
 .. note::
-   This example is based on the Jupyter notebook ``examples/notebooks/create_a_model.ipynb``. You can run it interactively or follow along here.
+
+    This example is based on the Jupyter notebook ``examples/notebooks/create_a_model.ipynb``. You can run it interactively or follow along here.
 
 Learning Objectives
 -------------------
 
 By the end of this example, you'll understand:
 
-* The structure of continual learning models in Mammoth Lite
-* How to inherit from the ``ContinualModel`` base class
-* How to implement the ``observe`` method for your algorithm
-* How to register custom models with the framework
-* How to test and use your custom model
+* The structure of continual learning models in Mammoth Lite  
+* How to inherit from the ``ContinualModel`` base class  
+* How to implement the ``observe`` method for your algorithm  
+* How to register custom models with the framework  
+* How to test and use your custom model  
 
 Understanding Continual Learning Models
 ---------------------------------------
@@ -25,10 +26,10 @@ Model Structure
 
 All continual learning models in Mammoth Lite share a common structure:
 
-* **Inheritance**: Inherit from ``ContinualModel`` base class
-* **Registration**: Use the ``@register_model`` decorator
-* **Core Method**: Implement the ``observe`` method
-* **Compatibility**: Optionally specify supported scenarios
+* **Inheritance**: Inherit from ``ContinualModel`` base class  
+* **Registration**: Use the ``@register_model`` decorator  
+* **Core Method**: Implement the ``observe`` method  
+* **Compatibility**: Optionally specify supported scenarios  
 
 The ``observe`` method is the heart of any continual learning algorithm - it defines how the model processes each batch of training data.
 
@@ -37,11 +38,11 @@ Base Class Features
 
 The ``ContinualModel`` class provides:
 
-* ``self.net``: The backbone neural network (e.g., ResNet-18)
-* ``self.opt``: The optimizer (e.g., SGD, Adam)  
-* ``self.loss``: The loss function (usually CrossEntropyLoss)
-* ``self.device``: The device (CPU or GPU)
-* ``self.args``: All configuration arguments
+* ``self.net``: The backbone neural network (e.g., ResNet-18)  
+* ``self.opt``: The optimizer (e.g., SGD, Adam)    
+* ``self.loss``: The loss function (usually CrossEntropyLoss)  
+* ``self.device``: The device (CPU or GPU)  
+* ``self.args``: All configuration arguments  
 
 Creating a Simple Custom Model
 ------------------------------
@@ -108,16 +109,16 @@ Key Components Explained
 **COMPATIBILITY Attribute**
   Specifies which continual learning scenarios your model supports:
   
-  * ``'class-il'``: Class-incremental learning. This is also the default and most common scenario.
-  * ``'task-il'``: Task-incremental learning  
-  * More scenarios are available in the full Mammoth framework.
+  * ``'class-il'``: Class-incremental learning. This is also the default and most common scenario.  
+  * ``'task-il'``: Task-incremental learning    
+  * More scenarios are available in the full Mammoth framework.  
 
 **observe Method Arguments**
   
-  * ``inputs``: Augmented training images (data augmentation applied)
-  * ``labels``: Ground truth class labels
-  * ``not_aug_inputs``: Original images without augmentation (useful for replay-based algorithms)
-  * ``epoch``: (optional) Current epoch number (useful for scheduling)
+  * ``inputs``: Augmented training images (data augmentation applied)  
+  * ``labels``: Ground truth class labels  
+  * ``not_aug_inputs``: Original images without augmentation (useful for replay-based algorithms)  
+  * ``epoch``: (optional) Current epoch number (useful for scheduling)  
 
 Testing Your Custom Model
 -------------------------
@@ -147,10 +148,10 @@ Once defined, you can use your custom model like any built-in model:
 .. code-block:: text
 
    Task 1: 100%|██████████| 1563/1563 [01:20<00:00, 19.42it/s]
-   Accuracy on task 1:	[Class-IL]: 68.20 	[Task-IL]: 68.20
+   Accuracy on task 1:	[Class-IL]: 68.20% 	[Task-IL]: 68.20%
    
    Task 2: 100%|██████████| 1563/1563 [01:18<00:00, 19.95it/s]  
-   Accuracy on task 2:	[Class-IL]: 32.90 	[Task-IL]: 62.62
+   Accuracy on task 2:	[Class-IL]: 32.90% 	[Task-IL]: 62.62%
 
    ...
 

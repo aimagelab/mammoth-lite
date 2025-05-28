@@ -1,7 +1,11 @@
-import logging
+import sys
 from typing import TYPE_CHECKING, Tuple
 import torch
-from tqdm import tqdm
+# Check if we're in a notebook environment
+if 'ipykernel' not in sys.modules:
+    from tqdm import tqdm
+else:
+    from tqdm.notebook import tqdm
 
 if TYPE_CHECKING:
     from models.utils.continual_model import ContinualModel
