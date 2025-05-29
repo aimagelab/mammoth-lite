@@ -15,7 +15,8 @@ Dependencies
 
 Mammoth Lite has minimal dependencies to keep the framework lightweight:
 
-**Core Dependencies:**  
+**Core Dependencies:**
+
 * ``torch`` - PyTorch for deep learning  
 * ``torchvision`` - Computer vision utilities  
 * ``numpy`` - Numerical computing  
@@ -23,7 +24,8 @@ Mammoth Lite has minimal dependencies to keep the framework lightweight:
 * ``gitpython`` - Git repository handling  
 * ``six`` - Python 2/3 compatibility  
 
-**Development Dependencies:**  
+**Development Dependencies:**
+
 * ``pytest`` - Testing framework  
 * ``ipywidgets`` - Jupyter notebook widgets  
 * ``mypy`` - Type checking  
