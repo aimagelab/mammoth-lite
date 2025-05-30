@@ -6,7 +6,7 @@ Mammoth Lite is designed for didactic purposes and to provide a simple and clean
 It should not be used for academic research or development. For that, you should refer to the complete [Mammoth](https://github.com/aimagelab/mammoth).
 
 <p align="center">
-  <img width="1000" height="200" src="docs/static/mammoth_banner.svg" alt="logo">
+  <img width="1000" height="160" src="docs/static/mammoth_banner.svg" alt="logo">
 </p>
 
 ## ⚙️ Setup
