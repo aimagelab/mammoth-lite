@@ -1,4 +1,4 @@
-# 🦣 Mammoth Lite - A *liter* Framework for Continual Learning
+# 🦣 Mammoth Lite - A *lightweight* Framework for Continual Learning
 
 Mammoth Lite is a lightweight and simplified version of the [Mammoth](https://github.com/aimagelab/mammoth) framework for continual learning research. This version prioritizes ease of use and minimal dependencies while maintaining the core functionality for developing and testing continual learning algorithms.
 
