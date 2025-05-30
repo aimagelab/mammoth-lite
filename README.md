@@ -6,15 +6,16 @@ Mammoth Lite is designed for didactic purposes and to provide a simple and clean
 It should not be used for academic research or development. For that, you should refer to the complete [Mammoth](https://github.com/aimagelab/mammoth).
 
 <p align="center">
-  <img width="1000" height="200" src="docs/static/mammoth_banner.svg" alt="logo">
+  <img width="800" height="125" src="docs/static/mammoth_banner.svg" alt="logo">
 </p>
 
 ## ⚙️ Setup
 
-- 📥 Install with `pip install -e .` or run directly with `python mammoth/main.py ...`
-- 🚀 Use `mammoth/main.py` to run experiments
-- 🧩 Models can be added to the `mammoth/models` folder
-- 📊 Datasets can be added to the `mammoth/datasets` folder
+- 📥 Install with `pip install -e .` or run directly with `python main.py ...`
+- 🚀 Use `main.py` to run experiments
+- 🧩 Models can be added to the `mammoth_lite/models` folder
+- 📊 Datasets can be added to the `mammoth_lite/datasets` folder
+- ⚡ Supports [uv](https://docs.astral.sh/uv/) for fast package management
 
 ## 🧪 Examples
 
@@ -23,22 +24,43 @@ It should not be used for academic research or development. For that, you should
 To run a basic experiment:
 
 ```bash
-python mammoth/main.py --model sgd --dataset seq-cifar10
+cd mammoth_lite
+python main.py --model sgd --dataset seq-cifar10
 ```
 
 You can customize various parameters:
 
 ```bash
-python mammoth/main.py --model sgd --dataset seq-cifar10 --lr 0.01 --n_epochs 50
+cd mammoth_lite
+python main.py --model sgd --dataset seq-cifar10 --lr 0.01 --n_epochs 50
+```
+
+### 📓 Interactive Notebooks
+
+For a more interactive learning experience, check out the Jupyter notebooks in the `examples/notebooks/` folder:
+
+- **`basics.ipynb`**: Learn the fundamentals of using Mammoth Lite with step-by-step examples
+- **`create_a_model.ipynb`**: Build your own continual learning algorithm from scratch
+- **`create_a_backbone.ipynb`**: Design custom neural network architectures
+- **`create_a_dataset.ipynb`**: Implement your own continual learning datasets
+
+These notebooks provide hands-on tutorials with detailed explanations and code examples.
+
+To use them, you will need to build Mammoth Lite:
+
+```bash
+pip install -e . 
+# or
+uv build # <- faster, preferred if you have uv
 ```
 
 ### Project Structure
 
-- `mammoth/main.py`: Main entry point for running experiments
-- `mammoth/models`: Contains continual learning models
-- `mammoth/datasets`: Contains dataset implementations
-- `mammoth/backbone`: Neural network architectures
-- `mammoth/utils`: Utility functions and training code
+- `mammoth_lite/main.py`: Main entry point for running experiments
+- `mammoth_lite/models`: Contains continual learning models
+- `mammoth_lite/datasets`: Contains dataset implementations
+- `mammoth_lite/backbone`: Neural network architectures
+- `mammoth_lite/utils`: Utility functions and training code
 
 ## 🔧 Datasets
 
