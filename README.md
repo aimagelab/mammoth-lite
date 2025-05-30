@@ -9,6 +9,10 @@ It should not be used for academic research or development. For that, you should
   <img width="800" height="125" src="docs/static/mammoth_banner.svg" alt="logo">
 </p>
 
+## 📚 Documentation
+
+📖 **[View the complete documentation](https://aimagelab.github.io/mammoth-lite/)** for detailed guides, API reference, and examples.
+
 ## ⚙️ Setup
 
 - 📥 Install with `pip install -e .` or run directly with `python main.py ...`
