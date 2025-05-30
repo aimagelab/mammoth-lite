@@ -24,9 +24,9 @@ The Catastrophic Forgetting Problem
 
 When neural networks learn new tasks, they tend to forget previously learned information. This usually happens because:
 
-1. **Weight Interference**: New task learning overwrites weights important for previous tasks
-2. **Feature Drift**: Shared representations shift to accommodate new data
-3. **Output Bias**: Decision boundaries change to favor recent training data
+1. **Weight Interference**: New task learning overwrites weights important for previous tasks  
+2. **Feature Drift**: Shared representations shift to accommodate new data  
+3. **Output Bias**: Decision boundaries change to favor recent training data  
 
 Mammoth Lite Framework Components
 ---------------------------------
