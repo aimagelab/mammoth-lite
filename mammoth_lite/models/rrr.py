@@ -139,34 +139,10 @@ class RRR(ContinualModel):
         if self.args.n_epochs > 1:
             self.net.load_state_dict(deepcopy(self.best_model))
 
-        if self.current_task == 1:
-            self.compute_memory()
-
         self.update_memory()
 
         self.current_task += 1
 
-    def compute_memory(self):
-        ssize = 1
-        print ("***"*200)
-        print ("saliency_size", self.saliency_size)
-        for s in self.saliency_size:
-            ssize *= s
-        saliency_memory = 4 * self.args.buffer_size * ssize
-
-        size = self.in_size
-        image_size = 3 * size * size
-
-        samples_memory = 4 * self.args.buffer_size * image_size
-        count = sum(p.numel() for p in self.net.parameters() if p.requires_grad)
-
-        print('Num parameters in the entire model    = %s ' % (count))
-        architecture_memory = 4 * count
-
-        print("-------------------------->  Saliency memory size: (%sB)" % (saliency_memory))
-        print("-------------------------->  Episodic memory size: (%sB)" % (samples_memory))
-        print("------------------------------------------------------------------------------")
-        print("                             TOTAL:  %sB" % (architecture_memory+samples_memory+saliency_memory))
 
     def update_memory(self):
         # Get memory set for each task seen so far with the updated samples per class and return new spc
@@ -181,7 +157,7 @@ class RRR(ContinualModel):
 
         self.saliency_loaders = torch.utils.data.DataLoader(evidence_sets,
                                                       batch_size=self.args.minibatch_size,
-                                                      num_workers=self.args.num_workers,
+                                                      num_workers=0,
                                                       shuffle=True)
 
 

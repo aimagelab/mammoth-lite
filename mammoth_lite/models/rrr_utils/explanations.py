@@ -74,7 +74,7 @@ class GradCAM(_BaseWrapper):
         for name, module in self.model.named_modules():
             if self.target_layer is None or name == self.target_layer:
                 self.handlers.append(module.register_forward_hook(save_fmaps(name)))
-                self.handlers.append(module.register_backward_hook(save_grads(name)))
+                self.handlers.append(module.register_full_backward_hook(save_grads(name)))
 
         probs, ids = self.forward(inputs)
         ids_ = torch.LongTensor([ids[:, 0].tolist()]).T.to(device=self.device)

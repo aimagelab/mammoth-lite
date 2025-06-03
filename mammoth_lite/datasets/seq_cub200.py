@@ -35,10 +35,10 @@ class MyCUB200(Dataset):
 
         if not os.path.exists(root):
             raise FileNotFoundError(f"Dataset not found at {root}. Please download the 'CUB_200_2011' dataset and place it in the 'data' directory.")
-
-        f_images = pd.read_csv(os.path.join(self.root, 'images.txt'), delim_whitespace=True, names=['id', 'path'],
+        
+        f_images = pd.read_csv(os.path.join(self.root, 'images.txt'), sep=r'\s+', names=['id', 'path'],
                                header=None)
-        f_targets = pd.read_csv(os.path.join(self.root, 'image_class_labels.txt'), delim_whitespace=True,
+        f_targets = pd.read_csv(os.path.join(self.root, 'image_class_labels.txt'), sep=r'\s+',
                                 names=['id', 'class'], header=None)
 
         self.data = np.array([os.path.join(self.root, 'images', path) for path in f_images['path'].to_list()])
