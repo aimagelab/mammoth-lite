@@ -143,13 +143,13 @@ class ContinualModel(nn.Module):
         """
         pass
 
-    def end_epoch(self, dataset: 'ContinualDataset') -> None:
+    def end_epoch(self, epoch: int, dataset: 'ContinualDataset') -> None:
         """
         Called after each epoch.
         """
         pass
 
-    def begin_epoch(self, dataset: 'ContinualDataset') -> None:
+    def begin_epoch(self, epoch: int, dataset: 'ContinualDataset') -> None:
         """
         Called before each epoch.
         """

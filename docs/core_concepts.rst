@@ -165,13 +165,13 @@ Mammoth Lite trains models sequentially on each task:
         for epoch in range(args.n_epochs):
 
             # Hook to initialize stuff for the current epoch
-            model.begin_epoch(dataset)
+            model.begin_epoch(epoch, dataset)
 
             for batch in dataset.train_loader:
                 model.observe(batch.inputs, batch.labels, batch.not_aug_inputs)
 
             # Hook to handle the end of the current epoch
-            model.end_epoch(dataset)
+            model.end_epoch(epoch, dataset)
        
         # Hook to perform some final operations after training the task 
         model.end_task(dataset)

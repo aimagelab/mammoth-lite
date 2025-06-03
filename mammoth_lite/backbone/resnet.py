@@ -262,6 +262,32 @@ def resnet18(num_classes: int, num_filters: int = 64) -> ResNet:
     """
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, num_filters)
 
+@register_backbone("resnet18_7x7_pt")
+def resnet18_7x7(num_classes: int, num_filters: int = 64) -> ResNet:
+    """
+    Instantiates a ResNet18 network.
+
+    Args:
+        num_classes: number of output classes
+        num_filters: number of filters
+
+    Returns:
+        ResNet network
+    """
+    model = ResNet(BasicBlock, [2, 2, 2, 2], num_classes, num_filters, initial_conv_k=7)
+    # load pretrained weights from torchvision
+    st = torchvision.models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1).state_dict()
+    for k in list(st.keys()):
+        if 'downsample' in k:
+            st[k.replace('downsample.', 'shortcut.')] = st.pop(k)
+
+    missing, unexpected = model.load_state_dict(st, strict=False)
+    assert len([m for m in missing if 'classifier' not in m]) == 0, \
+        "Some weights are missing in the pretrained model: {}".format(missing)
+    assert len([u for u in unexpected if 'fc' not in u]) == 0, \
+        "Some unexpected weights in the pretrained model: {}".format(unexpected)
+    return model
+
 @register_backbone("resnet50")
 def resnet50(num_classes: int, num_filters: int = 64) -> ResNet:
     """

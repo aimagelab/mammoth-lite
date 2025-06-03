@@ -97,11 +97,11 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                 for epoch in range(args.n_epochs):
                     train_pbar.set_description(f"Task {t + 1} - Epoch {epoch + 1}")
 
-                    model.begin_epoch(dataset)
+                    model.begin_epoch(epoch, dataset)
 
                     train_epoch(model, train_loader, args, pbar=train_pbar, epoch=epoch)
 
-                    model.end_epoch(dataset)
+                    model.end_epoch(epoch, dataset)
 
             model.end_task(dataset)
 

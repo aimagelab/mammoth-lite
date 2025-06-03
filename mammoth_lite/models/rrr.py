@@ -2,30 +2,30 @@
 This module is an implementation of Remembering for the Right Reasons
 """
 from copy import deepcopy
+import types
 import os
 import numpy as np
 import torch
+import torch.nn as nn
 from torchvision.datasets.folder import default_loader
+
 from models import register_model
 from models.utils.continual_model import ContinualModel
 from utils.evaluate import evaluate
-
+from utils.buffer import Buffer
+from utils.args import add_rehearsal_args
 from models.rrr_utils import RAdam
-
-
 
 class EvidenceSet(torch.utils.data.Dataset):
 
-    def __init__(self, args, task_id, transforms):
+    def __init__(self, args, task_id, transforms, buffer: Buffer):
         self.args = args
         sal_path = os.path.join('checkpoints', 'sal_{}.pth'.format(task_id))
-        mem_path = os.path.join('checkpoints', 'mem_{}.pth'.format(task_id))
         pred_path = os.path.join('checkpoints', 'pred_{}.pth'.format(task_id))
 
-        memory_set = torch.load(mem_path, weights_only=False)
-        self.data = memory_set.data
-        self.target = memory_set.targets
-        self.saliencies =torch.load(sal_path, weights_only=False)
+        self.data = buffer.examples[:len(buffer)]
+        self.target = buffer.labels[:len(buffer)]
+        self.saliencies = torch.load(sal_path, weights_only=False)
         self.predictions = torch.load(pred_path, weights_only=False)
         self.transform = transforms
 
@@ -55,29 +55,38 @@ class RRR(ContinualModel):
 
     @staticmethod
     def get_parser(parser):
-         # TODO: check defaults
+        parser.set_defaults(optimizer='radam')
+
+        add_rehearsal_args(parser)
         parser.add_argument('--lr_saliency', type=float, default=0.0005)
         parser.add_argument('--saliency_loss_type', type=str, choices=['l1','l2'], default='l1')
-        parser.add_argument('--saliency_method', type=str, choices=['gc','smooth','bp','gbp','deconv'], default='gc')
         parser.add_argument('--saliency_reg', type=float, default=100)
         
         parser.add_argument('--fscil', type=int, choices=[0,1], default=0)
         parser.add_argument('--lr_multiplier', type=float, default=1)
-        parser.add_argument('--lr_factor', type=float, required=True)
-        parser.add_argument('--lr_patience', type=float, required=True)
+        parser.add_argument('--lr_factor', type=float, default=3)
+        parser.add_argument('--lr_patience', type=float, default=5)
         parser.add_argument('--train_schedule', type=int, nargs='+', default=[20,40,60])
+        parser.add_argument('--schedule_gamma', type=float, default=0.2)
 
+        parser.add_argument('--target_layer', type=str, default='layer4.1.conv2')
 
         return parser
 
     def __init__(self, backbone, loss, args, transform, dataset=None):
+        self.lrs = None
+        def identity(self, x, *args, **kwargs):
+            return x
+        backbone.pool_fn = types.MethodType(identity, backbone)
+        backbone.classifier = nn.Linear(7*7*512, backbone.classifier.out_features).to(backbone.device)
+
         super(RRR, self).__init__(backbone, loss, args, transform, dataset=dataset)
         self.current_task = 0
+        self.buffer = Buffer(args.buffer_size)
 
         self.lrs = [self.args.lr for _ in range(self.n_tasks)]
-        if self.args.fscil:
-            self.lrs[1:] = [self.args.lr_multiplier * lr for lr in self.lrs[1:]]
-
+        self.lrs[1:] = [2 * lr for lr in self.lrs[1:]]
+    
         self.lrs_exp = [self.args.lr_saliency for _ in range(self.n_tasks)]
         self.lr_min=[lr/1000. for lr in self.lrs]
         self.lr_factor=self.args.lr_factor
@@ -85,9 +94,9 @@ class RRR(ContinualModel):
         self.in_size = dataset.SIZE[0]
 
         if self.args.saliency_loss_type == "l1":
-            self.sal_loss = torch.nn.L1Loss().to(device=self.args.device.name)
+            self.sal_loss = torch.nn.L1Loss()
         elif self.args.saliency_loss_type == "l2":
-            self.sal_loss = torch.nn.MSELoss().to(device=self.args.device.name)
+            self.sal_loss = torch.nn.MSELoss()
         else:
             raise NotImplementedError
 
@@ -95,52 +104,40 @@ class RRR(ContinualModel):
         self.get_optimizer_explanations()
 
 
-        if self.args.saliency_method == 'gc':
-            print ("Using GradCAM to obtain saliency maps")
-            from models.rrr_utils.explanations import GradCAM as Explain
-        elif self.args.saliency_method == 'smooth':
-            print ("Using SmoothGrad to obtain saliency maps")
-            from models.rrr_utils.explanations import SmoothGrad as Explain
-        elif self.args.saliency_method == 'bp':
-            print ("Using BackPropagation to obtain saliency maps")
-            from models.rrr_utils.explanations import BackPropagation as Explain
-        elif self.args.saliency_method == 'gbp':
-            print ("Using Guided BackPropagation to obtain saliency maps")
-            from models.rrr_utils.explanations import GuidedBackPropagation as Explain
-        elif self.args.saliency_method == 'deconv':
-            from models.rrr_utils.explanations import Deconvnet as Explain
+        from models.rrr_utils.explanations import GradCAM as Explain
 
-        self.explainer = Explain(self.args)
+        self.explainer = Explain(self.args, self.device)
         
     def get_optimizer(self, params=None, lr=None):
         params = params if params is not None else self.net.parameters()
-        if lr is None: lr=self.lrs[self.current_task]
+        if lr is None:
+            lr=self.lrs[self.current_task] if self.lrs is not None else self.args.lr
 
         self.opt = RAdam(params, lr=lr, betas=(0.9, 0.999), weight_decay=0)
 
     def get_optimizer_explanations(self, lr=None):
-        if lr is None: lr=self.lrs_exp[self.current_task]
+        if lr is None:
+            lr=self.lrs_exp[self.current_task]
 
-        if self.args.opt=="sgd":
+        if self.args.optimizer == "sgd":
             self.optimizer_explanations = torch.optim.SGD(self.net.parameters(), lr=lr, weight_decay=self.args.train.wd)
             self.scheduler_exp_opt = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer_explanations,
                                                                          patience=self.lr_patience,
                                                                           factor=self.lr_factor/10,
                                                                           min_lr=self.lr_min[self.current_task], verbose=True)
-        elif(self.args.opt=="adam"):
+        elif(self.args.optimizer=="adam"):
             self.optimizer_explanations= torch.optim.Adam(self.net.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08,
                                weight_decay=0.0, amsgrad=False)
-
-        elif (self.args.opt=="radam"):
+        elif (self.args.optimizer=="radam"):
             self.optimizer_explanations = RAdam(self.net.parameters(), lr=lr, betas=(0.9, 0.999), weight_decay=0)
+        else:
+            raise NotImplementedError("Optimizer {} is not implemented".format(self.args.optimizer))
 
 
     def end_task(self, dataset):
         # Restore best validation model
         if self.args.n_epochs > 1:
             self.net.load_state_dict(deepcopy(self.best_model))
-
-        self.save_model(self.current_task, deepcopy(self.net.state_dict()))
 
         if self.current_task == 1:
             self.compute_memory()
@@ -177,7 +174,7 @@ class RRR(ContinualModel):
 
         evidence_set = []
         for t in range(self.current_task+1):
-            evidence = EvidenceSet(self.args, t, self.transform)
+            evidence = EvidenceSet(self.args, t, self.transform, self.buffer)
             evidence_set.append(evidence)
 
         evidence_sets = torch.utils.data.ConcatDataset(evidence_set)
@@ -201,8 +198,8 @@ class RRR(ContinualModel):
         self.get_optimizer()
         self.get_optimizer_explanations()
     
-    def begin_epoch(self, dataset):
-        self.adjust_learning_rate()
+    def begin_epoch(self, epoch, dataset):
+        self.adjust_learning_rate(epoch)
 
         if self.current_task > 0:
             for idx, (inputs, _, sal, _) in enumerate(self.saliency_loaders):
@@ -220,13 +217,22 @@ class RRR(ContinualModel):
                 sal_loss.backward(retain_graph=True)
                 self.optimizer_explanations.step()
 
-    def end_epoch(self, dataset):
+    def end_epoch(self, epoch, dataset):
+        # NOTE: this should be balancoir instead of reservoir
+        # single pass on train dataset to store examples in the buffer
+        for data in dataset.train_loader:
+            _, labels, not_aug_inputs = data
+            self.buffer.add_data(
+                examples=not_aug_inputs,
+                labels=labels,
+            )
+        
         # NOTE: validation on the test!
         # check the official code: pc_valid==0 for the given config
-        accs, loss = evaluate(dataset.test_loaders[-1])
+        accs, loss = evaluate(self, dataset)
         mean_acc = np.mean(accs[0])
         
-        if (self.args.opt == "sgd"):
+        if (self.args.optimizer == "sgd"):
             self.scheduler_opt.step(loss)
             self.scheduler_exp_opt.step(loss)
 
@@ -235,9 +241,9 @@ class RRR(ContinualModel):
         self.best_acc = max(mean_acc, self.best_acc)
         
     def adjust_learning_rate(self, epoch):
-        if epoch in self.args.train.schedule:
+        if epoch in self.args.train_schedule:
             for param_group in self.opt.param_groups:
-                param_group['lr'] *= self.args.train.gamma
+                param_group['lr'] *= self.args.gamma_schedule
             print("Reducing learning rate to ", param_group['lr'])
 
 
@@ -245,14 +251,13 @@ class RRR(ContinualModel):
         if not os.path.exists('checkpoints'):
             os.makedirs('checkpoints')
 
-        # Generate saliency for images from the last seen task
-        memory_path = os.path.join('checkpoints', 'mem_{}.pth'.format(self.current_task))
-        memory_set = torch.load(memory_path, weights_only=False)
+        memory_set = torch.utils.data.TensorDataset(self.buffer.examples[:len(self.buffer)], self.buffer.labels[:len(self.buffer)])
         num_samples = len(memory_set)
         single_loader = torch.utils.data.DataLoader(memory_set, batch_size=1, num_workers=0, shuffle=False)
 
         saliencies, predictions = [], []
-        for idx, (img, y, tt) in enumerate(single_loader):
+        for idx, (img, y) in enumerate(single_loader):
+
 
             img = img.to(self.device)
             sal, self.net, _, _ = self.explainer(img, self.net, self.current_task)
@@ -295,12 +300,5 @@ class RRR(ContinualModel):
         self.opt.zero_grad()
         loss.backward(retain_graph=True)
         self.opt.step()
-
-        # NOTE: this should be balancoir instead of reservoir
-        self.buffer.add_data(
-            inputs=inputs,
-            labels=labels,
-            not_aug_inputs=not_aug_inputs
-        )
 
         return loss.item()

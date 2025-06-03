@@ -12,8 +12,8 @@
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
-            "args":"--model sgd --dataset seq-cifar10 --n_epochs 1 --batch_size 32 --lr=0.1 --debug_mode=1",
-            "cwd": "${workspaceFolder}/mammoth",
+            "args":"--model rrr --dataset seq-cub200 --n_epochs 1 --batch_size 8 --lr=0.1 --debug_mode=1 --num_workers=0 --buffer_size=100 --minibatch_size=8",
+            "cwd": "${workspaceFolder}/mammoth_lite",
         },
         {
             "name": "basics",
