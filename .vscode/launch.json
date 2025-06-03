@@ -12,7 +12,7 @@
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
-            "args":"--model rrr --dataset seq-cub200 --n_epochs 1 --batch_size 8 --lr=0.1 --debug_mode=1 --num_workers=0 --buffer_size=100 --minibatch_size=8",
+            "args":"--model rrr --dataset seq-cub200 --n_epochs 70 --batch_size 128 --lr=0.001 --buffer_size=400 --minibatch_size=10",
             "cwd": "${workspaceFolder}/mammoth_lite",
         },
         {
