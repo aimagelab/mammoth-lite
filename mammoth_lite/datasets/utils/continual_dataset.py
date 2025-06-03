@@ -42,6 +42,7 @@ class ContinualDataset(object):
     N_CLASSES_PER_TASK: int
     N_TASKS: int
     N_CLASSES: int
+    SIZE: Tuple[int, int]
 
     log_fn: Callable
     train_loader: torch.utils.data.DataLoader

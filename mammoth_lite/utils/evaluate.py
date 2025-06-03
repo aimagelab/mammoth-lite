@@ -49,7 +49,9 @@ def evaluate(model: 'ContinualModel', dataset: 'ContinualDataset') -> Tuple[list
     n_classes = dataset.get_offsets()[1]
     tot_seen_samples = 0
     total_len = sum(len(x) for x in dataset.test_loaders) if hasattr(dataset.test_loaders[0], '__len__') else None
+    loss = 0
 
+    loss_fn = dataset.get_loss()
     pbar = tqdm(dataset.test_loaders, total=total_len, desc='Evaluating')
     for k, test_loader in enumerate(dataset.test_loaders):
         correct, correct_mask_classes, total = 0.0, 0.0, 0.0
@@ -66,6 +68,7 @@ def evaluate(model: 'ContinualModel', dataset: 'ContinualDataset') -> Tuple[list
             inputs, labels = inputs.to(model.device), labels.to(model.device)
 
             outputs = model(inputs)
+            loss += loss_fn(outputs, labels).item()
 
             _, pred = torch.max(outputs[:, :n_classes].data, 1)
             correct += torch.sum(pred == labels).item()
@@ -92,4 +95,4 @@ def evaluate(model: 'ContinualModel', dataset: 'ContinualDataset') -> Tuple[list
     pbar.close()
 
     model.net.train(status)
-    return accs, accs_mask_classes
+    return (accs, accs_mask_classes), loss/i

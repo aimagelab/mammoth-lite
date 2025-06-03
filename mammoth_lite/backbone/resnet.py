@@ -257,3 +257,10 @@ def resnet18(num_classes: int, num_filters: int = 64) -> ResNet:
         ResNet network
     """
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, num_filters)
+
+@register_backbone("resnet50")
+def resnet50(num_classes: int, num_filters: int = 64) -> ResNet:
+    """
+    Instantiates a ResNet50 network.
+    """
+    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, num_filters)

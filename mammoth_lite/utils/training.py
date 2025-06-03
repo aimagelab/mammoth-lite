@@ -97,14 +97,19 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                 for epoch in range(args.n_epochs):
                     train_pbar.set_description(f"Task {t + 1} - Epoch {epoch + 1}")
 
+                    model.begin_epoch(dataset)
+
                     train_epoch(model, train_loader, args, pbar=train_pbar, epoch=epoch)
+
+                    model.end_epoch(dataset)
 
             model.end_task(dataset)
 
-            accs = evaluate(model, dataset)
+            accs, avg_loss = evaluate(model, dataset)
 
             mean_acc = np.mean(accs, axis=1)
             print(f'Accuracy for task {t + 1}\t[Class-IL]: {mean_acc[0]:.2f}% \t[Task-IL]: {mean_acc[1]:.2f}%')
+            print(f'Average loss: {avg_loss:.6f}%')
 
             results.append(accs[0])
             results_mask_classes.append(accs[1])
