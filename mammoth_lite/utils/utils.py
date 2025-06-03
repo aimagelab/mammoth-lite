@@ -41,6 +41,7 @@ def load_runner(model: str, dataset: str, args: dict[str, Any]) -> Tuple['Contin
     
 
 def initalize_args(model_name: str, dataset_name: str, args: dict[str, Any]) -> Namespace:
+    os.environ['MAMMOTH_NOTEBOOK'] = '1' # Set this to indicate that we are running in a notebook environment
     parser = ArgumentParser(allow_abbrev=False, add_help=False)
 
     add_initial_args(parser)

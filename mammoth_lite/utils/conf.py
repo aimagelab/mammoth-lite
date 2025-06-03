@@ -3,6 +3,7 @@ This module contains utility functions for configuration settings.
 """
 
 import logging
+import os
 import torch
 
 
@@ -39,4 +40,7 @@ def base_path() -> str:
     Returns:
         the base path (default: `./data/`)
     """
-    return './data/'
+    if os.getenv('MAMMOTH_NOTEBOOK'):
+        return './data/'
+    else:
+        return '../data/'

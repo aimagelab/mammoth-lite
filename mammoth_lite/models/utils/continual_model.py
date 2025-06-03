@@ -143,6 +143,18 @@ class ContinualModel(nn.Module):
         """
         pass
 
+    def end_epoch(self, epoch: int, dataset: 'ContinualDataset') -> None:
+        """
+        Called after each epoch.
+        """
+        pass
+
+    def begin_epoch(self, epoch: int, dataset: 'ContinualDataset') -> None:
+        """
+        Called before each epoch.
+        """
+        pass
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Computes a forward pass.

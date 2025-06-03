@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 from torch.nn.functional import avg_pool2d, relu
 from torch import Tensor
+import torchvision
+from torchvision.models import ResNet18_Weights
 
 from backbone import MammothBackbone, register_backbone
 
@@ -170,6 +172,8 @@ class ResNet(MammothBackbone):
 
         self.classifier = nn.Linear(self.feature_dim, num_classes)
 
+        self.pool_fn = avg_pool2d
+
     def set_return_prerelu(self, enable=True):
         self.return_prerelu = enable
         for c in self.modules():
@@ -220,7 +224,7 @@ class ResNet(MammothBackbone):
         out_3 = self.layer3(out_2)  # -> 256, 8, 8
         out_4 = self.layer4(out_3)  # -> 512, 4, 4
 
-        feature = avg_pool2d(out_4, out_4.shape[2])  # -> 512, 1, 1
+        feature = self.pool_fn(out_4, out_4.shape[2])  # -> 512, 1, 1
         feature = feature.view(feature.size(0), -1)  # 512
 
         if returnt == 'features':
@@ -257,3 +261,36 @@ def resnet18(num_classes: int, num_filters: int = 64) -> ResNet:
         ResNet network
     """
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, num_filters)
+
+@register_backbone("resnet18_7x7_pt")
+def resnet18_7x7(num_classes: int, num_filters: int = 64) -> ResNet:
+    """
+    Instantiates a ResNet18 network.
+
+    Args:
+        num_classes: number of output classes
+        num_filters: number of filters
+
+    Returns:
+        ResNet network
+    """
+    model = ResNet(BasicBlock, [2, 2, 2, 2], num_classes, num_filters, initial_conv_k=7)
+    # load pretrained weights from torchvision
+    st = torchvision.models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1).state_dict()
+    for k in list(st.keys()):
+        if 'downsample' in k:
+            st[k.replace('downsample.', 'shortcut.')] = st.pop(k)
+
+    missing, unexpected = model.load_state_dict(st, strict=False)
+    assert len([m for m in missing if 'classifier' not in m]) == 0, \
+        "Some weights are missing in the pretrained model: {}".format(missing)
+    assert len([u for u in unexpected if 'fc' not in u]) == 0, \
+        "Some unexpected weights in the pretrained model: {}".format(unexpected)
+    return model
+
+@register_backbone("resnet50")
+def resnet50(num_classes: int, num_filters: int = 64) -> ResNet:
+    """
+    Instantiates a ResNet50 network.
+    """
+    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, num_filters)
