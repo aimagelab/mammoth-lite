@@ -30,7 +30,7 @@ def mask_classes(outputs: torch.Tensor, dataset: 'ContinualDataset', k: int) -> 
 
 
 @torch.no_grad()
-def evaluate(model: 'ContinualModel', dataset: 'ContinualDataset') -> Tuple[list, list]:
+def evaluate(model: 'ContinualModel', dataset: 'ContinualDataset', last_only=False) -> Tuple[list, list]:
     """
     Evaluates the single-class top-1 accuracy of the model for each past task.
 
@@ -39,6 +39,7 @@ def evaluate(model: 'ContinualModel', dataset: 'ContinualDataset') -> Tuple[list
     Args:
         model: the model to be evaluated
         dataset: the continual dataset at hand
+        last_only: if True, only the last task is evaluated. Defaults to False.
 
     Returns:
         a tuple of lists, containing the class-il and task-il accuracy for each task.

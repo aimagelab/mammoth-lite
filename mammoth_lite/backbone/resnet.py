@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 from torch.nn.functional import avg_pool2d, relu
 from torch import Tensor
+import torchvision
+from torchvision.models import ResNet18_Weights
 
 from backbone import MammothBackbone, register_backbone
 
@@ -170,6 +172,8 @@ class ResNet(MammothBackbone):
 
         self.classifier = nn.Linear(self.feature_dim, num_classes)
 
+        self.pool_fn = avg_pool2d
+
     def set_return_prerelu(self, enable=True):
         self.return_prerelu = enable
         for c in self.modules():
@@ -220,7 +224,7 @@ class ResNet(MammothBackbone):
         out_3 = self.layer3(out_2)  # -> 256, 8, 8
         out_4 = self.layer4(out_3)  # -> 512, 4, 4
 
-        feature = avg_pool2d(out_4, out_4.shape[2])  # -> 512, 1, 1
+        feature = self.pool_fn(out_4, out_4.shape[2])  # -> 512, 1, 1
         feature = feature.view(feature.size(0), -1)  # 512
 
         if returnt == 'features':

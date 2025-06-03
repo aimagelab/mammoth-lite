@@ -55,7 +55,7 @@ def parse_args():
     from utils import create_if_not_exists
     from utils.args import add_initial_args, add_management_args, add_experiment_args
 
-    from models import get_all_models
+    from models import get_all_models, get_model_class
 
     parser = argparse.ArgumentParser(description='Mammoth - A benchmark Continual Learning framework for Pytorch', allow_abbrev=False, add_help=False)
 
@@ -74,6 +74,10 @@ def parse_args():
     # - add the main Mammoth arguments
     add_management_args(parser)
     add_experiment_args(parser)
+
+    # - add the model specific arguments
+    model_class = get_model_class(args)
+    model_class.get_parser(parser)
 
     # 3) Once all arguments are in the parser, we can parse
     args = parser.parse_args()
