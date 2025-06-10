@@ -70,6 +70,8 @@ class RRR(ContinualModel):
         parser.add_argument('--schedule_gamma', type=float, default=0.2)
 
         parser.add_argument('--target_layer', type=str, default='layer4.1.conv2')
+        parser.add_argument('--gamma_schedule', type=float, default=0.2,
+                            help='Factor to reduce learning rate by at each step in train_schedule')
 
         return parser
 
