@@ -3,14 +3,9 @@ import os
 import numpy as np
 import math
 from argparse import Namespace
-from typing import Iterable, Optional
+from typing import Iterable, Optional, TYPE_CHECKING
 import sys
 import torch
-# Check if we're in a notebook environment
-if 'ipykernel' not in sys.modules:
-    from tqdm import tqdm
-else:
-    from tqdm.notebook import tqdm
 
 from datasets.utils.continual_dataset import ContinualDataset
 from models.utils.continual_model import ContinualModel
@@ -18,6 +13,19 @@ from models.utils.continual_model import ContinualModel
 from utils.checkpoints import mammoth_load_checkpoint, save_mammoth_checkpoint
 from utils.evaluate import evaluate
 
+if TYPE_CHECKING:
+    from tqdm import tqdm
+else:
+    # Check if we're in a notebook environment
+    if 'ipykernel' not in sys.modules:
+        from tqdm import tqdm
+    else:
+        from tqdm.notebook import tqdm
+
+def update_progress_bar(pbar: 'tqdm', model: ContinualModel):
+    if model.pbar_suffix:
+        pbar.set_postfix(model.pbar_suffix, refresh=False)
+        pbar.update()
 
 def train_epoch(model: ContinualModel,
                        train_loader: Iterable,
@@ -49,8 +57,8 @@ def train_epoch(model: ContinualModel,
 
         assert not math.isnan(loss)
 
-        pbar.set_postfix({'loss': loss, 'lr': model.opt.param_groups[0]['lr']}, refresh=False)
-        pbar.update()
+        model.pbar_suffix.update({'loss': loss, 'lr': model.opt.param_groups[0]['lr']})
+        update_progress_bar(pbar, model)
 
 def train(model: ContinualModel, dataset: ContinualDataset,
           args: Optional[Namespace] = None) -> None:
@@ -102,6 +110,8 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                     train_epoch(model, train_loader, args, pbar=train_pbar, epoch=epoch)
 
                     model.end_epoch(epoch, dataset)
+
+                    update_progress_bar(train_pbar, model)
 
             model.end_task(dataset)
 

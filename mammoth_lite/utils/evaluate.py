@@ -53,7 +53,7 @@ def evaluate(model: 'ContinualModel', dataset: 'ContinualDataset', last_only=Fal
     loss = 0
 
     loss_fn = dataset.get_loss()
-    pbar = tqdm(dataset.test_loaders, total=total_len, desc='Evaluating')
+    pbar = tqdm(dataset.test_loaders, total=total_len, desc='Evaluating', leave=False, unit='batch')
     for k, test_loader in enumerate(dataset.test_loaders):
         correct, correct_mask_classes, total = 0.0, 0.0, 0.0
         test_iter = iter(test_loader)

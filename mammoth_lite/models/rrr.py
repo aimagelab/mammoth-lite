@@ -140,6 +140,7 @@ class RRR(ContinualModel):
         # Restore best validation model
         if self.args.n_epochs > 1:
             self.net.load_state_dict(deepcopy(self.best_model))
+        self.net.eval()
 
         self.update_memory()
 
@@ -209,6 +210,7 @@ class RRR(ContinualModel):
         # check the official code: pc_valid==0 for the given config
         accs, loss = evaluate(self, dataset)
         mean_acc = np.mean(accs[0])
+        self.pbar_suffix = {'eval_acc': mean_acc, 'eval_loss': loss}
         
         if (self.args.optimizer == "sgd"):
             self.scheduler_opt.step(loss)
@@ -223,7 +225,6 @@ class RRR(ContinualModel):
             for param_group in self.opt.param_groups:
                 param_group['lr'] *= self.args.gamma_schedule
             print("Reducing learning rate to ", param_group['lr'])
-
 
     def update_saliencies(self):
         if not os.path.exists('checkpoints'):

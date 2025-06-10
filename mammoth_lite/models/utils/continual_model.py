@@ -46,6 +46,7 @@ class ContinualModel(nn.Module):
     dataset: 'ContinualDataset'  # The instance of the dataset. Used to update the number of classes in the current task
     num_classes: int  # The total number of classes
     n_tasks: int  # The number of tasks
+    pbar_suffix: dict = {}  # Extra information to be displayed in the progress bar
 
     @staticmethod
     def get_parser(parser: ArgumentParser) -> ArgumentParser:
